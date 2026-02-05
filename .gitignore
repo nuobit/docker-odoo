@@ -1,0 +1,13 @@
+# Basics
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Workspace
+*.code-workspace

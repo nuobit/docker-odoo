@@ -1,0 +1,17 @@
+services:
+  odoo10-1:
+    container_name: odoo10-1
+    image: ghcr.io/<org>/odoo-10.0:1.0.0
+    user: "99910:99910"
+    ports:
+      - "127.0.0.1:8010:8069"
+    volumes:
+      - /srv/docker/stack/odoo10-1/odoo.conf:/etc/odoo/odoo.conf:ro
+      - /srv/docker/data/odoo10-1/src:/opt/odoo/src
+      - /srv/docker/stack/odoo10-1/repos.yaml:/opt/odoo/src/repos.yaml:ro
+      - /srv/docker/data/odoo10-1/data:/var/lib/odoo
+    networks: [pg96-1-net]
+
+networks:
+  pg96-1-net:
+    external: true

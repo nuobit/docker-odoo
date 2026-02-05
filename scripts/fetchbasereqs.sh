@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+source "${HOME}/.local/lib/common.sh"
+
+script_name="${0##*/}"
+
+if [[ $# -eq 0 ]]; then
+  pip_install \
+    git-aggregator \
+    click_odoo_contrib \
+    git+https://github.com/OCA/openupgradelib.git
+else
+  echo "Unknown arguments!!"
+  echo ""
+  echo "Usage: ${script_name}"
+  exit 2
+fi
