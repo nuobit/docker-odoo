@@ -6,8 +6,8 @@ SRC=${SRC:-/opt/odoo/src}
 ODOO_CONF_DIR=${ODOO_CONF_DIR:-/etc/odoo}
 ODOO_CONF=${ODOO_CONF:-${ODOO_CONF_DIR}/odoo.conf}
 
-ODOO_PATH=${ODOO_PATH:-${SRC}/odoo}
-ODOO_BIN=${ODOO_BIN:-${ODOO_PATH}/odoo-bin}
+ODOO_DIR=${ODOO_DIR:-${SRC}/odoo}
+ODOO_BIN=${ODOO_BIN:-${ODOO_DIR}/odoo-bin}
 
 ODOO_SHELL_PORT=${ODOO_SHELL_PORT:-19999}
 
@@ -29,10 +29,11 @@ pip_install() {
 # Usage: odoo_exec <subcommand> [args...]
 odoo_exec() {
   local cmd="${1:-}"
-  if [ -z "${cmd}" ]; then
+  if [ -n "${cmd}" ]; then
+    shift
+    exec "${PYTHON}" "${ODOO_BIN}" "${cmd}" --config "${ODOO_CONF}" "$@"
+  else
     echo "Usage: odoo_exec <subcommand> [args...]" >&2
     exit 2
   fi
-  shift
-  exec "${PYTHON}" "${ODOO_BIN}" "${cmd}" --config "${ODOO_CONF}" "$@"
 }

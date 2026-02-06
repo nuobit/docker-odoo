@@ -32,7 +32,7 @@ ghcr.io/<org>/odoo-10.0
 
 ## Base characteristics
 
-- Base OS: Debian stretch (EOL, using `archive.debian.org`)
+- Base OS: Debian Stretch (EOL, using `archive.debian.org`)
 - Python: 2.7
 - Node.js: 6.x
 - wkhtmltopdf: 0.12.1.4 (static Debian package)
@@ -336,7 +336,7 @@ docker push ghcr.io/<org>/odoo-10.0:1.0.0
 
 ## Notes & limitations
 
-- Debian stretch and Python 2.7 are EOL
+- Debian Stretch and Python 2.7 are EOL
 - TLS / CA issues may occur in restricted networks
 - Internet access is required at first bootstrap (pip, fonts)
 - This image is **not suitable for new Odoo deployments**
