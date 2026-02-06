@@ -102,7 +102,7 @@ case "${command}" in
     database_name="${1}"
     
     echo "> Dropping database ${database_name}..."
-    PGPASSWORD="${DB_OWNER_PASSWORD}" dropdb -h "${PGHOST}" -U "${DB_OWNER}" --if-exists "${database_name}" || {
+    dropdb -h "${PGHOST}" -U "${PGUSER}" --if-exists "${database_name}" || {
       echo "Failed to drop database." >&2
       exit 1
     }
@@ -125,7 +125,7 @@ case "${command}" in
 
     database_name="${1}"
     echo "> Dropping database ${database_name}..."
-    PGPASSWORD="${DB_OWNER_PASSWORD}" dropdb -h "${PGHOST}" -U "${DB_OWNER}" --if-exists "${database_name}" || {
+    PGPASSWORD="${pg_password}" dropdb -h "${PGHOST}" -U "${PGUSER}" --if-exists "${database_name}" || {
       echo "Failed to drop database." >&2
       exit 1
     }
