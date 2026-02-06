@@ -33,7 +33,7 @@ EOF
   if curl -fsSL -o "${ZIP}" https://www.reportlab.com/ftp/fonts/pfbfer.zip; then
     echo "Downloaded pfbfer.zip from Internet"
   else
-    echo "WARN: download failed; using bundled pfbfer.zip" >&2
+    echo "WARNING: download failed; using bundled pfbfer.zip" >&2
     cp "${HOME}/pfbfer.zip" "${ZIP}"
   fi
 
@@ -46,11 +46,14 @@ EOF
 }
 
 testing_loop() {
-  echo "Looping to infinite for testing purposes..."
-  exec tail -f /dev/null
+  echo "Looping infinitely for testing purposes..."
+  while :; do
+    sleep 3600
+  done
 }
 
 ##### MAIN
+testing_loop
 if [ ! -f "${CID_FILE}" ] || [ "${CID}" != "$(cat "${CID_FILE}")" ]; then
   echo "New container: bootstrapping..."
   mkdir -p "${STATE_DIR}"

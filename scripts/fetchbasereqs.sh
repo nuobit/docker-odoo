@@ -7,6 +7,7 @@ script_name="${0##*/}"
 
 if [[ $# -eq 0 ]]; then
   pip_install \
+    wheel \
     git-aggregator \
     click_odoo_contrib \
     git+https://github.com/OCA/openupgradelib.git

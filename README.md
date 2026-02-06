@@ -144,6 +144,7 @@ This ensures:
 | `/opt/odoo/.local/bin/fetchbasereqs` | `scripts/fetchbasereqs.sh` | Fetch base requirements script |
 | `/opt/odoo/.local/bin/fetchreqs` | `scripts/fetchreqs.sh` | Fetch repo requirements script |
 | `/opt/odoo/.local/bin/fetchcode` | `scripts/fetchcode.sh` | Fetch git repositories script |
+| `/opt/odoo/.local/bin/dbctl` | `scripts/dbctl.sh` | Database management script |
 | `/etc/odoo/constraints.txt` | `constraints.txt` | Python package version constraints |
 | `/opt/odoo/pfbfer.zip` | `pfbfer.zip` | ReportLab Type1 fonts archive |
 
@@ -185,12 +186,76 @@ These scripts can be executed inside the running container:
 
 | Script | Description | Usage |
 |--------|------------|-------|
-| `initdb` | Initialize database | `docker compose exec <container> initdb <database>` |
+| `initdb` | Initialize database | `docker compose exec <container> initdb <database> [nodemo]` |
 | `updatemodules` | Update modules | `docker compose exec <container> updatemodules <database> <all\|module_list\|changed>` |
 | `shell` | Interactive Odoo shell | `docker compose exec <container> shell <database>` |
 | `fetchbasereqs` | Fetch base requirements | `docker compose exec <container> fetchbasereqs` |
 | `fetchreqs` | Fetch repo requirements | `docker compose exec <container> fetchreqs <repo_path>` |
 | `fetchcode` | Fetch git repositories | `docker compose exec <container> fetchcode [addon_path] [jobs]` |
+| `dbctl` | Database management | `docker compose exec <container> dbctl <command> [args...]` |
+
+### Database management with `dbctl`
+
+The `dbctl` script provides database management commands:
+
+```bash
+# Create a database with unaccent extension
+docker compose exec <container> dbctl create <database>
+
+# Create a database with specific owner
+docker compose exec <container> dbctl create <database> <owner>
+
+# Drop a database
+docker compose exec <container> dbctl drop <database>
+
+# Reset (drop and recreate) a database
+docker compose exec <container> dbctl reset <database> [owner]
+
+# Create a PostgreSQL user
+docker compose exec <container> dbctl createuser <username> [password]
+```
+
+#### Authentication options for `dbctl`
+
+**Option 1: Interactive password prompt (most secure)**
+```bash
+docker compose exec -it <container> dbctl create mydb
+# You will be prompted for the PostgreSQL password
+```
+
+**Option 2: Environment variable (less secure, visible in process list)**
+```bash
+docker compose exec -e PGPASSWORD=yourpass <container> dbctl create mydb
+```
+
+**Option 3: .pgpass file (recommended for automation)**
+Mount a `.pgpass` file in your docker-compose:
+```yaml
+volumes:
+  - ./.pgpass:/opt/odoo/.pgpass:ro
+```
+
+Format of `.pgpass`:
+```
+hostname:port:database:username:password
+# Example:
+db:5432:*:postgres:yourpass
+```
+
+Set permissions: `chmod 600 .pgpass`
+
+**Option 4: Docker environment variables (set in docker-compose)**
+```yaml
+environment:
+  PGHOST: db
+  PGUSER: postgres
+  PGPASSWORD: yourpass
+```
+
+**Default connection parameters:**
+- `PGHOST`: `db` (typical docker-compose database service name)
+- `PGUSER`: `postgres`
+- `PGPASSWORD`: Not set (will prompt if not provided)
 
 **Interactive shell access:**
 ```bash

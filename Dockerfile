@@ -14,7 +14,7 @@ RUN sed -i 's|deb.debian.org/debian|archive.debian.org/debian|g' /etc/apt/source
 #RUN printf 'Acquire::Check-Valid-Until "false";\nAcquire::AllowInsecureRepositories "true";\n' > /etc/apt/apt.conf.d/99no-check-valid-until
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    vim ca-certificates curl git unzip \
+    apt-transport-https vim ca-certificates curl git unzip \
     gcc build-essential \
     python2.7 python-pip python-setuptools \
     python-dev \
@@ -24,6 +24,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg-dev zlib1g-dev \
     libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# PostgreSQL client from official archive repo (Stretch EOL)
+RUN install -d /usr/share/postgresql-common/pgdg && \
+        curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
+        echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt-archive.postgresql.org/pub/repos/apt stretch-pgdg main" \
+            > /etc/apt/sources.list.d/pgdg.list && \
+        apt-get update && apt-get install -y --no-install-recommends postgresql-client && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ## wkhtmltopdf
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -86,6 +95,8 @@ COPY --chown=odoo:odoo scripts/fetchreqs.sh /opt/odoo/.local/bin/fetchreqs
 RUN chmod +x /opt/odoo/.local/bin/fetchreqs
 COPY --chown=odoo:odoo scripts/fetchcode.sh /opt/odoo/.local/bin/fetchcode
 RUN chmod +x /opt/odoo/.local/bin/fetchcode
+COPY --chown=odoo:odoo scripts/dbctl.sh /opt/odoo/.local/bin/dbctl
+RUN chmod +x /opt/odoo/.local/bin/dbctl
 
 USER odoo
 
