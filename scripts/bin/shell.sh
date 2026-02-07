@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-source "${HOME}/.local/lib/common.sh"
+source "${HOME}/scripts/lib/common.sh"
 
 script_name="${0##*/}"
 

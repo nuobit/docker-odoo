@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-source "${HOME}/.local/lib/common.sh"
+source "${HOME}/scripts/lib/common.sh"
 
 script_name="${0##*/}"
 
@@ -16,8 +16,8 @@ if [[ $# -le 2 ]]; then
   if [ -n "${jobs}" ]; then
     jobs_flag="-j ${jobs}"
   fi
-  pushd "${SRC}" > /dev/null
-  gitaggregate -c "${AGG}" ${addon_flag} ${jobs_flag} aggregate
+  pushd "${SRC_DIR}" > /dev/null
+  gitaggregate -c "${SRC_REPOS_FILENAME}" ${addon_flag} ${jobs_flag} aggregate
   popd > /dev/null
 else
   echo "Unknown arguments!!"

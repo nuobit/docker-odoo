@@ -2,9 +2,7 @@
 set -euo pipefail
 
 # get common vars and functions
-# SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-# source "${SCRIPT_DIR}/lib/common.sh"
-source "${HOME}/.local/lib/common.sh"
+source "${HOME}/scripts/lib/common.sh"
 
 # specific entrypoint functions
 STATE_DIR=${ODOO_DATA_DIR}/.bootstrap
@@ -16,7 +14,7 @@ CID="$(hostname)"
 install_reportlab_pfbfer_fonts() {
   echo "Installing ReportLab Type1 fonts (pfbfer.zip)…"
 
-  RLFONTS="$(${PYTHON} - <<'EOF'
+  RLFONTS="$(${PYTHON_BIN} - <<'EOF'
 import os, reportlab
 print(os.path.join(os.path.dirname(reportlab.__file__), "fonts"))
 EOF
@@ -34,7 +32,7 @@ EOF
     echo "Downloaded pfbfer.zip from Internet"
   else
     echo "WARNING: download failed; using bundled pfbfer.zip" >&2
-    cp "${HOME}/pfbfer.zip" "${ZIP}"
+    cp "${DIST_ASSETS_DIR}/pfbfer.zip" "${ZIP}"
   fi
 
   [ -s "${ZIP}" ] || { echo "ERROR: pfbfer.zip not available (download failed and local missing)" >&2; exit 1; }
@@ -53,16 +51,16 @@ testing_loop() {
 }
 
 ##### MAIN
-testing_loop
+#testing_loop
 if [ ! -f "${CID_FILE}" ] || [ "${CID}" != "$(cat "${CID_FILE}")" ]; then
-  echo "New container: bootstrapping..."
-  mkdir -p "${STATE_DIR}"
-  "${SCRIPTS_BIN}/fetchbasereqs"
-  "${SCRIPTS_BIN}/fetchcode"
-  "${SCRIPTS_BIN}/fetchreqs" odoo
-  install_reportlab_pfbfer_fonts
-  echo "${CID}" > "${CID_FILE}"
+    echo "New container: bootstrapping..."
+    mkdir -p "${STATE_DIR}"
+    "${DIST_BIN_DIR}/fetchbasereqs"
+    "${DIST_BIN_DIR}/fetchcode"
+    "${DIST_BIN_DIR}/fetchreqs" odoo
+    install_reportlab_pfbfer_fonts
+    echo "${CID}" > "${CID_FILE}"
 else
-  echo "Running Odoo..."  
+    echo "Running Odoo..."
 fi
 odoo_exec server "$@"

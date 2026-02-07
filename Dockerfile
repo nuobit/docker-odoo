@@ -66,37 +66,36 @@ RUN npm install -g less@2.7.3 less-plugin-clean-css@1.5.1
 # optional: create a fixed user
 ENV HOME=/opt/odoo
 RUN useradd -m -u 99910 -d "$HOME" odoo
-#RUN mkdir -p /opt/odoo && chown -R odoo:odoo /opt/odoo
 
-ENV BIN_DIR=$HOME/.local/bin
-RUN mkdir -p "$BIN_DIR" && chown -R odoo:odoo "$HOME"
+ENV PATH=$HOME/scripts/bin:$HOME/.local/bin:$PATH
 
-ENV PATH=$BIN_DIR:$PATH
+# configuration files
+COPY --chown=odoo:odoo config/paths.env /opt/odoo/config/paths.env
+COPY --chown=odoo:odoo config/constraints.txt /opt/odoo/config/constraints.txt
 
-# files
-COPY --chown=odoo:odoo constraints.txt /etc/odoo/constraints.txt
-
-COPY --chown=odoo:odoo pfbfer.zip /opt/odoo/pfbfer.zip
-
-COPY --chown=odoo:odoo entrypoint.sh /opt/odoo/entrypoint.sh
-RUN chmod +x /opt/odoo/entrypoint.sh
+# assets
+COPY --chown=odoo:odoo scripts/assets/pfbfer.zip /opt/odoo/scripts/assets/pfbfer.zip
 
 # scripts
-COPY --chown=odoo:odoo lib/common.sh /opt/odoo/.local/lib/common.sh
-COPY --chown=odoo:odoo scripts/initdb.sh /opt/odoo/.local/bin/initdb
-RUN chmod +x /opt/odoo/.local/bin/initdb
-COPY --chown=odoo:odoo scripts/updatemodules.sh /opt/odoo/.local/bin/updatemodules
-RUN chmod +x /opt/odoo/.local/bin/updatemodules
-COPY --chown=odoo:odoo scripts/shell.sh /opt/odoo/.local/bin/shell
-RUN chmod +x /opt/odoo/.local/bin/shell
-COPY --chown=odoo:odoo scripts/fetchbasereqs.sh /opt/odoo/.local/bin/fetchbasereqs
-RUN chmod +x /opt/odoo/.local/bin/fetchbasereqs
-COPY --chown=odoo:odoo scripts/fetchreqs.sh /opt/odoo/.local/bin/fetchreqs
-RUN chmod +x /opt/odoo/.local/bin/fetchreqs
-COPY --chown=odoo:odoo scripts/fetchcode.sh /opt/odoo/.local/bin/fetchcode
-RUN chmod +x /opt/odoo/.local/bin/fetchcode
-COPY --chown=odoo:odoo scripts/dbctl.sh /opt/odoo/.local/bin/dbctl
-RUN chmod +x /opt/odoo/.local/bin/dbctl
+COPY --chown=odoo:odoo scripts/entrypoint.sh /opt/odoo/scripts/entrypoint.sh
+RUN chmod +x /opt/odoo/scripts/entrypoint.sh
+
+COPY --chown=odoo:odoo scripts/lib/common.sh /opt/odoo/scripts/lib/common.sh
+
+COPY --chown=odoo:odoo scripts/bin/initdb.sh /opt/odoo/scripts/bin/initdb
+RUN chmod +x /opt/odoo/scripts/bin/initdb
+COPY --chown=odoo:odoo scripts/bin/updatemodules.sh /opt/odoo/scripts/bin/updatemodules
+RUN chmod +x /opt/odoo/scripts/bin/updatemodules
+COPY --chown=odoo:odoo scripts/bin/shell.sh /opt/odoo/scripts/bin/shell
+RUN chmod +x /opt/odoo/scripts/bin/shell
+COPY --chown=odoo:odoo scripts/bin/fetchbasereqs.sh /opt/odoo/scripts/bin/fetchbasereqs
+RUN chmod +x /opt/odoo/scripts/bin/fetchbasereqs
+COPY --chown=odoo:odoo scripts/bin/fetchreqs.sh /opt/odoo/scripts/bin/fetchreqs
+RUN chmod +x /opt/odoo/scripts/bin/fetchreqs
+COPY --chown=odoo:odoo scripts/bin/fetchcode.sh /opt/odoo/scripts/bin/fetchcode
+RUN chmod +x /opt/odoo/scripts/bin/fetchcode
+COPY --chown=odoo:odoo scripts/bin/dbctl.sh /opt/odoo/scripts/bin/dbctl
+RUN chmod +x /opt/odoo/scripts/bin/dbctl
 
 USER odoo
 
@@ -104,4 +103,4 @@ RUN git config --global user.name "Odoo Bot" && git config --global user.email "
 
 WORKDIR $HOME
 
-ENTRYPOINT ["/opt/odoo/entrypoint.sh"]
+ENTRYPOINT ["/opt/odoo/scripts/entrypoint.sh"]

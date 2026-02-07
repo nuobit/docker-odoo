@@ -340,7 +340,7 @@ networks:
 | `SRC` | `/opt/odoo/src` | Source directory |
 | `CONF_BASE` | `/etc/odoo` | Config base path |
 | `CONF` | `/etc/odoo/odoo.conf` | Odoo config file |
-| `AGG` | `repos.yaml` | Git-aggregator config |
+| `SRC_REPOS_FILENAME` | `repos.yaml` | Git-aggregator config |
 | `ODOO_BIN` | `odoo-bin` | Odoo executable |
 | `PYTHON` | `python` | Python interpreter |
 
