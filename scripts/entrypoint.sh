@@ -55,8 +55,18 @@ if [[ ! -f "${CID_FILE}" ]] || [[ "${CID}" != "$(cat "${CID_FILE}")" ]]; then
   echo "> Generating addons_path and updating odoo.conf..."
   "${BIN_DIR}/genaddonspath"
   echo "< Done!"
-  echo "> Installing requirements for Odoo..."
-  "${BIN_DIR}/fetchreqs" odoo
+  # Install Python requirements for repos listed in FETCH_REQS_REPOS.
+  # Defaults to "odoo" only. Override in settings.env, e.g.:
+  #   FETCH_REQS_REPOS=odoo,oca/connector
+  echo "> Installing Python requirements..."
+  _reqs="${FETCH_REQS_REPOS:-odoo}"
+  _reqs="${_reqs// /}"          # strip spaces (allows "odoo, oca/connector")
+  IFS=',' read -ra _reqs_repos <<< "${_reqs}"
+  for repo in "${_reqs_repos[@]}"; do
+    [[ -z "${repo}" ]] && continue
+    echo "  - ${repo}"
+    "${BIN_DIR}/fetchreqs" "${repo}"
+  done
   echo "< Done!"
   echo "> Installing ReportLab Type1 fonts..."
   install_reportlab_pfbfer_fonts
