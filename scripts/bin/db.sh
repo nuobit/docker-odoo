@@ -11,7 +11,7 @@ odoo_conf_get() {
 }
 
 # Extract PostgreSQL connection info from Odoo config
-DB_HOST=${DB_HOST:-$(odoo_conf_get db_host)}
+DB_HOST=$(odoo_conf_get db_host)
 DB_OWNER=$(odoo_conf_get db_user)
 DB_OWNER_PASSWORD=$(odoo_conf_get db_password)
 
