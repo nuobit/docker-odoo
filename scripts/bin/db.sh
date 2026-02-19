@@ -32,6 +32,7 @@ usage() {
   echo "Commands:"
   echo "  create <dbname>                Create a database"
   echo "  init <dbname> [demo]           Initialize Odoo base module in database"
+  echo "  import <dbname>               Import SQL dump from stdin into database"
   echo "  drop <dbname>                  Drop a database (terminates active connections)"
   echo "  reset <dbname>                 Drop and recreate a database (terminates active connections)"
   echo "  block all <dbname>             Block ALL connections and terminate existing ones"
@@ -274,6 +275,31 @@ case "${command}" in
       "${demo_args[@]}" \
       --no-xmlrpc \
       --stop-after-init
+    trap - EXIT
+    do_unblock_connections users "${database_name}"
+    ;;
+
+  import)
+    if [[ $# -ne 1 ]]; then
+      echo "Usage: ${script_name} import <dbname>" >&2
+      echo "" >&2
+      echo "Reads SQL from stdin. Pipe a decompressed dump into this command:" >&2
+      echo "  bzcat dump.sql.bz2  | docker compose exec -T <container> db import <dbname>" >&2
+      echo "  zcat dump.sql.gz    | docker compose exec -T <container> db import <dbname>" >&2
+      echo "  unzip -p dump.sql.zip | docker compose exec -T <container> db import <dbname>" >&2
+      echo "  7z x -so dump.sql.7z | docker compose exec -T <container> db import <dbname>" >&2
+      echo "  cat dump.sql        | docker compose exec -T <container> db import <dbname>" >&2
+      exit 2
+    fi
+    database_name="${1}"
+    require_pguser_password
+    do_block_connections users "${database_name}"
+    do_terminate_all_connections "${database_name}"
+    do_set_user_connection_limit "${database_name}" 1
+    trap 'do_unblock_connections users "${database_name}"' EXIT
+    echo "> Importing SQL dump into ${database_name} from stdin..."
+    pg_owner -d "${database_name}" -f - < /dev/stdin
+    echo "< Done!!"
     trap - EXIT
     do_unblock_connections users "${database_name}"
     ;;

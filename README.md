@@ -211,6 +211,13 @@ docker compose exec <container> db create <database>
 docker compose exec <container> db init <database>
 docker compose exec <container> db init <database> demo   # with demo data
 
+# Import a SQL dump (reads from stdin, use -T flag):
+bzcat dump.sql.bz2    | docker compose exec -T <container> db import <database>
+zcat dump.sql.gz      | docker compose exec -T <container> db import <database>
+unzip -p dump.sql.zip | docker compose exec -T <container> db import <database>
+7z x -so dump.sql.7z  | docker compose exec -T <container> db import <database>
+cat dump.sql          | docker compose exec -T <container> db import <database>
+
 # Drop a database:
 docker compose exec <container> db drop <database>
 
@@ -246,6 +253,31 @@ The `drop` and `reset` commands automatically handle active connections before d
 3. **Drop the database**
 
 This eliminates the race condition where new connections could sneak in between termination and the actual drop. You do **not** need to manually stop Odoo or disconnect clients — the script handles it for you.
+
+#### Importing a SQL dump
+
+The `import` command reads a SQL dump from **stdin** and pipes it to `psql`. Decompress on the host side and pipe through `docker compose exec -T`:
+
+```bash
+# bzip2
+bzcat dump.sql.bz2 | docker compose exec -T <container> db import <database>
+
+# gzip
+zcat dump.sql.gz | docker compose exec -T <container> db import <database>
+
+# zip
+unzip -p dump.sql.zip | docker compose exec -T <container> db import <database>
+
+# 7z
+7z x -so dump.sql.7z | docker compose exec -T <container> db import <database>
+
+# plain SQL
+cat dump.sql | docker compose exec -T <container> db import <database>
+```
+
+**Important:** Always use the `-T` flag with `docker compose exec` when piping stdin — without it, Docker allocates a TTY which corrupts the data stream.
+
+The database must already exist (use `db create` first). During import, user connections are blocked and existing connections are terminated to prevent interference.
 
 #### Connection control
 
