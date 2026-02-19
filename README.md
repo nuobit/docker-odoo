@@ -230,9 +230,12 @@ docker compose exec <container> db dropuser
 
 #### Automatic connection termination on drop/reset
 
-The `drop` and `reset` commands automatically **terminate all active connections** to the target database before attempting to drop it. PostgreSQL refuses to drop a database that has active connections, so this step is essential for the operation to succeed.
+The `drop` and `reset` commands automatically handle active connections before dropping a database:
 
-This means you do **not** need to manually stop Odoo or disconnect clients before running `drop` or `reset` — the script handles it for you.
+1. **Block new connections** — sets `datallowconn = false` on the database to prevent new connections from being established
+2. **Terminate existing connections** — kills all active backends connected to the database
+
+This two-step approach eliminates the race condition where new connections could sneak in between termination and the actual drop. You do **not** need to manually stop Odoo or disconnect clients — the script handles it for you.
 
 #### Configuration
 

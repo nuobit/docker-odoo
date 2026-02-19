@@ -85,6 +85,28 @@ do_create_db() {
   echo "< Done!!"
 }
 
+# Block new connections to a database.
+# Usage: do_block_connections <dbname>
+do_block_connections() {
+  local dbname="${1}"
+  echo "> Blocking new connections to ${dbname}..."
+  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
+    -c "UPDATE pg_database SET datallowconn = false WHERE datname = '${dbname}';" \
+    > /dev/null 2>&1 || true
+  echo "< Done!!"
+}
+
+# Allow connections to a database.
+# Usage: do_allow_connections <dbname>
+do_allow_connections() {
+  local dbname="${1}"
+  echo "> Allowing connections to ${dbname}..."
+  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
+    -c "UPDATE pg_database SET datallowconn = true WHERE datname = '${dbname}';" \
+    > /dev/null 2>&1 || true
+  echo "< Done!!"
+}
+
 # Terminate all active connections to a database.
 # Usage: do_terminate_connections <dbname>
 do_terminate_connections() {
@@ -100,6 +122,7 @@ do_terminate_connections() {
 # Usage: do_drop_db <dbname>
 do_drop_db() {
   local dbname="${1}"
+  do_block_connections "${dbname}"
   do_terminate_connections "${dbname}"
   echo "> Dropping database ${dbname}..."
   pg_admin dropdb -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${dbname}" || {
