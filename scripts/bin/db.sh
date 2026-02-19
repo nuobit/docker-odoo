@@ -114,9 +114,18 @@ do_unblock_all_connections() {
 # Usage: do_block_user_connections <dbname>
 do_block_user_connections() {
   local dbname="${1}"
-  echo "> Blocking user connections to ${dbname} (limit=0)..."
+  do_set_user_connection_limit "${dbname}" 0
+}
+
+# Set a specific connection limit for non-superuser connections.
+# -1 = unlimited (default), 0 = blocked, N = max N connections.
+# Usage: do_set_user_connection_limit <dbname> <limit>
+do_set_user_connection_limit() {
+  local dbname="${1}"
+  local limit="${2}"
+  echo "> Setting user connection limit to ${limit} on ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "ALTER DATABASE \"${dbname}\" WITH CONNECTION LIMIT 0;" \
+    -c "ALTER DATABASE \"${dbname}\" WITH CONNECTION LIMIT ${limit};" \
     > /dev/null 2>&1 || true
   echo "< Done!!"
 }
@@ -126,11 +135,7 @@ do_block_user_connections() {
 # Usage: do_unblock_user_connections <dbname>
 do_unblock_user_connections() {
   local dbname="${1}"
-  echo "> Unblocking user connections to ${dbname} (unlimited)..."
-  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "ALTER DATABASE \"${dbname}\" WITH CONNECTION LIMIT -1;" \
-    > /dev/null 2>&1 || true
-  echo "< Done!!"
+  do_set_user_connection_limit "${dbname}" -1
 }
 
 # Terminate all active connections to a database.
@@ -237,13 +242,24 @@ case "${command}" in
     if [[ $# -lt 2 || "${2}" != "demo" ]]; then
       demo_args=("--without-demo=all")
     fi
+    # Block other connections to prevent the running Odoo server from
+    # accessing the database during init (which would cause concurrency
+    # errors and abort the initialization).
+    require_pguser_password
+    do_block_user_connections "${database_name}"
+    do_terminate_all_connections "${database_name}"
+    do_set_user_connection_limit "${database_name}" 1
     echo "> Initializing Odoo in database ${database_name}..."
-    odoo_exec server \
+    # Run Odoo directly (not via odoo_exec which uses exec and would
+    # replace this process, preventing the connection limit restore).
+    "${PYTHON_BIN}" "${ODOO_BIN}" server \
+      --config "${ODOO_CONF}" \
       --database "${database_name}" \
       --init base \
       "${demo_args[@]}" \
       --no-xmlrpc \
       --stop-after-init
+    do_unblock_user_connections "${database_name}"
     ;;
 
   drop)
