@@ -685,13 +685,13 @@
     merges:
         - oca 10.0
 
-./oca/connector:
-    remotes:
-        oca: https://github.com/OCA/connector.git
-    target:
-        oca 10.0
-    merges:
-        - oca 10.0
+# ./oca/connector:
+#     remotes:
+#         oca: https://github.com/OCA/connector.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
 
 # ./oca/edi:
 #     remotes:
