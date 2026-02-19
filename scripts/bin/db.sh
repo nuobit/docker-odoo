@@ -85,24 +85,50 @@ do_create_db() {
   echo "< Done!!"
 }
 
-# Block new connections to a database.
-# Usage: do_block_connections <dbname>
-do_block_connections() {
+# Block ALL new connections to a database (including superusers).
+# Sets datallowconn = false. Use do_unblock_all_connections to reverse.
+# Usage: do_block_all_connections <dbname>
+do_block_all_connections() {
   local dbname="${1}"
-  echo "> Blocking new connections to ${dbname}..."
+  echo "> Blocking all connections to ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
     -c "UPDATE pg_database SET datallowconn = false WHERE datname = '${dbname}';" \
     > /dev/null 2>&1 || true
   echo "< Done!!"
 }
 
-# Allow connections to a database.
-# Usage: do_allow_connections <dbname>
-do_allow_connections() {
+# Unblock ALL connections to a database.
+# Sets datallowconn = true. Reverses do_block_all_connections.
+# Usage: do_unblock_all_connections <dbname>
+do_unblock_all_connections() {
   local dbname="${1}"
-  echo "> Allowing connections to ${dbname}..."
+  echo "> Unblocking all connections to ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
     -c "UPDATE pg_database SET datallowconn = true WHERE datname = '${dbname}';" \
+    > /dev/null 2>&1 || true
+  echo "< Done!!"
+}
+
+# Block non-superuser connections (sets CONNECTION LIMIT 0).
+# Superusers can still connect. Use do_block_all_connections for a full block.
+# Usage: do_block_user_connections <dbname>
+do_block_user_connections() {
+  local dbname="${1}"
+  echo "> Blocking user connections to ${dbname} (limit=0)..."
+  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
+    -c "ALTER DATABASE \"${dbname}\" WITH CONNECTION LIMIT 0;" \
+    > /dev/null 2>&1 || true
+  echo "< Done!!"
+}
+
+# Unblock non-superuser connections (sets CONNECTION LIMIT -1 = unlimited).
+# Reverses do_block_user_connections.
+# Usage: do_unblock_user_connections <dbname>
+do_unblock_user_connections() {
+  local dbname="${1}"
+  echo "> Unblocking user connections to ${dbname} (unlimited)..."
+  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
+    -c "ALTER DATABASE \"${dbname}\" WITH CONNECTION LIMIT -1;" \
     > /dev/null 2>&1 || true
   echo "< Done!!"
 }
@@ -122,7 +148,7 @@ do_terminate_connections() {
 # Usage: do_drop_db <dbname>
 do_drop_db() {
   local dbname="${1}"
-  do_block_connections "${dbname}"
+  do_block_all_connections "${dbname}"
   do_terminate_connections "${dbname}"
   echo "> Dropping database ${dbname}..."
   pg_admin dropdb -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${dbname}" || {

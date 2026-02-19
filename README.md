@@ -232,10 +232,24 @@ docker compose exec <container> db dropuser
 
 The `drop` and `reset` commands automatically handle active connections before dropping a database:
 
-1. **Block new connections** — sets `datallowconn = false` on the database to prevent new connections from being established
+1. **Block all new connections** — sets `datallowconn = false` on the database, preventing anyone (including superusers) from opening new connections
 2. **Terminate existing connections** — kills all active backends connected to the database
+3. **Drop the database**
 
 This two-step approach eliminates the race condition where new connections could sneak in between termination and the actual drop. You do **not** need to manually stop Odoo or disconnect clients — the script handles it for you.
+
+#### Connection control helpers
+
+The `db` script also provides lower-level connection control functions (used internally, but available for manual recovery or maintenance):
+
+| Function | SQL effect | Who's blocked |
+|---|---|---|
+| `do_block_all_connections` | `datallowconn = false` | Everyone (including superusers) |
+| `do_unblock_all_connections` | `datallowconn = true` | Nobody |
+| `do_block_user_connections` | `CONNECTION LIMIT 0` | Regular users only (superusers can still connect) |
+| `do_unblock_user_connections` | `CONNECTION LIMIT -1` | Nobody (unlimited) |
+
+Use `do_block_user_connections` / `do_unblock_user_connections` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use the `_all_` variants for a complete lockout (e.g., before dropping a database).
 
 #### Configuration
 
