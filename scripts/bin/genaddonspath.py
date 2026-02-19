@@ -39,17 +39,24 @@ def source_env(path):
     )
 
 
-def get_repos_yaml_addons_path(repos_yaml, base_dir, order=None, check_existence=True):
+def get_repos_yaml_addons_path(repos_yaml, base_dir, order=None, exclude=None, check_existence=True):
     order_dirs = {}
     if order:
         order_dirs = {od.strip(): i for i, od in enumerate(order.split(','))}
     last_pos = len(order_dirs)
-    
+
+    exclude_dirs = set()
+    if exclude:
+        exclude_dirs = {e.strip() for e in exclude.split(',')}
+
     with open(repos_yaml, 'r') as f:
         repos_yaml_content = load_yaml_ordered(f)
-    
+
     addons_path_weighted = []
     for path in repos_yaml_content.keys():
+        norm_path = os.path.normpath(path)
+        if norm_path in exclude_dirs:
+            continue
         full_path = os.path.join(base_dir, path)
         norm_full_path = os.path.normpath(full_path)
         if check_existence and not os.path.exists(norm_full_path):
@@ -127,9 +134,10 @@ def main():
         raise Exception("ERROR: repos.yaml not found at: {}".format(repos_yaml))
     
     addons_path = get_repos_yaml_addons_path(
-        repos_yaml, 
-        src_dir, 
-        order=config.get('SRC_REPOS_ORDER'), 
+        repos_yaml,
+        src_dir,
+        order=config.get('SRC_REPOS_ORDER'),
+        exclude=config.get('SRC_ODOO_REPO_DIR'),
         check_existence=False,
     )
     

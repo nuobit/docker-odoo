@@ -409,7 +409,7 @@ Baked into the image at `/opt/odoo/dist/defaults.env` (from `config/defaults.env
 | `INSTANCE_SETTINGS` | `${INSTANCE_DIR}/settings.env` | Instance overrides file |
 | `INSTANCE_REPOS` | `${INSTANCE_DIR}/repos.yaml` | Git-aggregator config |
 | `SRC_DIR` | `${HOME}/src` | Source code directory |
-| `SRC_ODOO_REPO_DIR` | `odoo` | Odoo repo directory name |
+| `SRC_ODOO_REPO_DIR` | `odoo` | Odoo repo directory name (excluded from generated addons_path) |
 | `ODOO_DIR` | `${SRC_DIR}/odoo` | Odoo source directory |
 | `ODOO_BIN` | `${ODOO_DIR}/odoo-bin` | Odoo executable |
 | `ODOO_CONF` | `${INSTANCE_DIR}/odoo.conf` | Odoo config file |
