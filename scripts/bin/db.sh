@@ -5,10 +5,15 @@ source "${HOME}/scripts/lib/common.sh"
 
 script_name="${0##*/}"
 
+# Read a value from odoo.conf by key name (last occurrence wins, whitespace trimmed).
+odoo_conf_get() {
+  grep -E "^ *${1} *=" "${ODOO_CONF}" | tail -n 1 | sed -En "s/^ *${1} *= *(\S+)\s*$/\1/p" || :
+}
+
 # Extract PostgreSQL connection info from Odoo config
-DB_HOST=${DB_HOST:-$(grep -E "^ *db_host *=" "${ODOO_CONF}" | tail -n 1 | sed -En 's/^ *db_host *= *(.+)$/\1/p' || :)}
-DB_OWNER=$(grep -E "^ *db_user *=" "${ODOO_CONF}" | tail -n 1 | sed -En 's/^ *db_user *= *(.+)$/\1/p' || :)
-DB_OWNER_PASSWORD=$(grep -E "^ *db_password *=" "${ODOO_CONF}" | tail -n 1 | sed -En 's/^ *db_password *= *(.+)$/\1/p' || :)
+DB_HOST=${DB_HOST:-$(odoo_conf_get db_host)}
+DB_OWNER=$(odoo_conf_get db_user)
+DB_OWNER_PASSWORD=$(odoo_conf_get db_password)
 
 # Validate required parameters
 [[ -n "${DB_HOST}" ]]           || { echo "ERROR: PostgreSQL host not configured. Set db_host in ${ODOO_CONF} or DB_HOST in settings.env" >&2; exit 1; }
@@ -227,7 +232,7 @@ case "${command}" in
     require_pguser_password
     echo "> Creating user ${DB_OWNER}..."
     pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" \
-      -c "CREATE USER :'owner_name' WITH PASSWORD :'owner_pwd'" \
+      -c "CREATE USER :\"owner_name\" WITH PASSWORD :'owner_pwd'" \
       -v "owner_name=${DB_OWNER}" \
       -v "owner_pwd=${DB_OWNER_PASSWORD}"
     echo "< Done!!"

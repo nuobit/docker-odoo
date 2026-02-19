@@ -5,7 +5,11 @@ Generate addons_path parameter for odoo.conf from repos.yaml and update odoo.con
 import io
 import re
 import os
-import pipes
+# shlex.quote is Python 3+; fall back to pipes.quote for Python 2
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
 import subprocess
 
 import yaml
@@ -28,7 +32,7 @@ def load_yaml_ordered(stream):
 
 def source_env(path):
     out = subprocess.check_output(
-        ['bash', '-c', 'set -a; source {}; env -0'.format(pipes.quote(path))],
+        ['bash', '-c', 'set -a; source {}; env -0'.format(quote(path))],
     ).decode('utf-8')
     return dict(
         item.split('=', 1) for item in sorted(out.split('\0')) if item

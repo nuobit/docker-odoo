@@ -7,8 +7,14 @@ script_name="${0##*/}"
 
 if [[ $# -eq 1 ]]; then
   repo_path="${1}"
+  # Resolve and verify the path stays within SRC_DIR to prevent traversal
+  resolved="$(realpath -m "${SRC_DIR}/${repo_path}")"
+  case "${resolved}" in
+    "${SRC_DIR}/"*) ;;
+    *) echo "ERROR: repo_path '${repo_path}' resolves outside SRC_DIR" >&2; exit 1 ;;
+  esac
   pip_install \
-    --requirement "${SRC_DIR}/${repo_path}/requirements.txt"
+    --requirement "${resolved}/requirements.txt"
 else
   echo "Usage: ${script_name} <repo_path>" >&2
   exit 2

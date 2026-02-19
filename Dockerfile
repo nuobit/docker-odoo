@@ -72,24 +72,27 @@ ENV PATH=$HOME/scripts/bin:$HOME/.local/bin:$PATH
 # image defaults (baked in)
 COPY --chown=odoo:odoo config/ /opt/odoo/dist/
 
-# assets
-COPY --chown=odoo:odoo scripts/assets/pfbfer.zip /opt/odoo/scripts/assets/pfbfer.zip
-
-# scripts
-COPY --chown=odoo:odoo scripts/lib/common.sh /opt/odoo/scripts/lib/common.sh
-COPY --chown=odoo:odoo --chmod=755 scripts/entrypoint.sh /opt/odoo/scripts/entrypoint.sh
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/updatemodules.sh /opt/odoo/scripts/bin/updatemodules
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/shell.sh /opt/odoo/scripts/bin/shell
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/fetchbasereqs.sh /opt/odoo/scripts/bin/fetchbasereqs
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/fetchreqs.sh /opt/odoo/scripts/bin/fetchreqs
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/fetchcode.sh /opt/odoo/scripts/bin/fetchcode
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/genaddonspath.py /opt/odoo/scripts/bin/genaddonspath
-COPY --chown=odoo:odoo --chmod=755 scripts/bin/db.sh /opt/odoo/scripts/bin/db
+# scripts (assets, lib, bin)
+# - makes entrypoint executable
+# - strips .sh/.py extensions from bin/ scripts (e.g. db.sh -> db)
+#   so they can be called as bare commands via PATH
+# - makes all bin/ scripts executable
+COPY --chown=odoo:odoo scripts/ /opt/odoo/scripts/
+RUN cd /opt/odoo/scripts && \
+    chmod 755 entrypoint.sh && \
+    cd bin && \
+    for f in *.sh *.py; do mv "$f" "${f%.*}"; done && \
+    chmod 755 *
 
 USER odoo
 
 RUN git config --global user.name "Odoo Bot" && git config --global user.email "odoo@example.com"
 
 WORKDIR $HOME
+
+# Lightweight check: just verify Odoo HTTP server responds.
+# 120s interval to minimize worker impact (each check occupies 1 worker briefly).
+HEALTHCHECK --interval=120s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -fsS -o /dev/null http://localhost:8069/web/database/selector || exit 1
 
 ENTRYPOINT ["/opt/odoo/scripts/entrypoint.sh"]
