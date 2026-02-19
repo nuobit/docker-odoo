@@ -250,13 +250,13 @@ The `db` script also provides lower-level connection control functions (used int
 
 | Function | SQL effect | Who's blocked |
 |---|---|---|
-| `do_block_all_connections` | `datallowconn = false` | Everyone (including superusers) |
-| `do_unblock_all_connections` | `datallowconn = true` | Nobody |
-| `do_block_user_connections` | `CONNECTION LIMIT 0` | Regular users only (superusers can still connect) |
-| `do_unblock_user_connections` | `CONNECTION LIMIT -1` | Nobody (unlimited) |
+| `do_block_connections all` | `datallowconn = false` | Everyone (including superusers) |
+| `do_block_connections users` | `CONNECTION LIMIT 0` | Regular users only (superusers can still connect) |
+| `do_unblock_connections all` | `datallowconn = true` | Nobody |
+| `do_unblock_connections users` | `CONNECTION LIMIT -1` | Nobody (unlimited) |
 | `do_terminate_all_connections` | `pg_terminate_backend()` | Kills all active backends on the database |
 
-Use `do_block_user_connections` / `do_unblock_user_connections` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use the `_all_` variants for a complete lockout (e.g., before dropping a database).
+Use `do_block_connections users` / `do_unblock_connections users` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use `all` for a complete lockout (e.g., before dropping a database).
 
 `do_terminate_all_connections` excludes its own psql session (`pg_backend_pid()`) to avoid self-termination — this matters when the target database name matches `DB_PGDB` (e.g., both are `postgres`).
 

@@ -89,40 +89,23 @@ do_create_db() {
   echo "< Done!!"
 }
 
-# Block ALL new connections to a database (including superusers).
-# Sets datallowconn = false. Use do_unblock_all_connections to reverse.
-# Usage: do_block_all_connections <dbname>
-do_block_all_connections() {
+# Set datallowconn on a database (controls whether ANY connections are allowed).
+#   true  — connections allowed (default)
+#   false — all connections blocked, including superusers
+# Usage: do_set_datallowconn <dbname> <true|false>
+do_set_datallowconn() {
   local dbname="${1}"
-  echo "> Blocking all connections to ${dbname}..."
+  local value="${2}"
+  echo "> Setting datallowconn = ${value} on ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "UPDATE pg_database SET datallowconn = false WHERE datname = '${dbname}';" \
+    -c "UPDATE pg_database SET datallowconn = ${value} WHERE datname = '${dbname}';" \
     > /dev/null 2>&1 || true
   echo "< Done!!"
 }
 
-# Unblock ALL connections to a database.
-# Sets datallowconn = true. Reverses do_block_all_connections.
-# Usage: do_unblock_all_connections <dbname>
-do_unblock_all_connections() {
-  local dbname="${1}"
-  echo "> Unblocking all connections to ${dbname}..."
-  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "UPDATE pg_database SET datallowconn = true WHERE datname = '${dbname}';" \
-    > /dev/null 2>&1 || true
-  echo "< Done!!"
-}
-
-# Block non-superuser connections (sets CONNECTION LIMIT 0).
-# Superusers can still connect. Use do_block_all_connections for a full block.
-# Usage: do_block_user_connections <dbname>
-do_block_user_connections() {
-  local dbname="${1}"
-  do_set_user_connection_limit "${dbname}" 0
-}
-
-# Set a specific connection limit for non-superuser connections.
+# Set a connection limit for non-superuser connections.
 # -1 = unlimited (default), 0 = blocked, N = max N connections.
+# Superusers bypass this limit and can always connect.
 # Usage: do_set_user_connection_limit <dbname> <limit>
 do_set_user_connection_limit() {
   local dbname="${1}"
@@ -134,12 +117,32 @@ do_set_user_connection_limit() {
   echo "< Done!!"
 }
 
-# Unblock non-superuser connections (sets CONNECTION LIMIT -1 = unlimited).
-# Reverses do_block_user_connections.
-# Usage: do_unblock_user_connections <dbname>
-do_unblock_user_connections() {
-  local dbname="${1}"
-  do_set_user_connection_limit "${dbname}" -1
+# Block connections to a database.
+#   all   — blocks everyone, including superusers (datallowconn = false)
+#   users — blocks regular users only (CONNECTION LIMIT 0), superusers can still connect
+# Usage: do_block_connections <all|users> <dbname>
+do_block_connections() {
+  local target="${1}"
+  local dbname="${2}"
+  case "${target}" in
+    all)   do_set_datallowconn "${dbname}" false ;;
+    users) do_set_user_connection_limit "${dbname}" 0 ;;
+    *)     echo "ERROR: do_block_connections: invalid target '${target}'. Expected 'all' or 'users'." >&2; exit 2 ;;
+  esac
+}
+
+# Unblock connections to a database.
+#   all   — reverses do_block_connections all (datallowconn = true)
+#   users — reverses do_block_connections users (CONNECTION LIMIT -1)
+# Usage: do_unblock_connections <all|users> <dbname>
+do_unblock_connections() {
+  local target="${1}"
+  local dbname="${2}"
+  case "${target}" in
+    all)   do_set_datallowconn "${dbname}" true ;;
+    users) do_set_user_connection_limit "${dbname}" -1 ;;
+    *)     echo "ERROR: do_unblock_connections: invalid target '${target}'. Expected 'all' or 'users'." >&2; exit 2 ;;
+  esac
 }
 
 # Terminate all active connections to a database.
@@ -160,7 +163,7 @@ do_terminate_all_connections() {
 # Usage: do_drop_db <dbname>
 do_drop_db() {
   local dbname="${1}"
-  do_block_all_connections "${dbname}"
+  do_block_connections all "${dbname}"
   do_terminate_all_connections "${dbname}"
   echo "> Dropping database ${dbname}..."
   pg_admin dropdb -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${dbname}" || {
@@ -250,11 +253,11 @@ case "${command}" in
     # accessing the database during init (which would cause concurrency
     # errors and abort the initialization).
     require_pguser_password
-    do_block_user_connections "${database_name}"
+    do_block_connections users "${database_name}"
     do_terminate_all_connections "${database_name}"
     do_set_user_connection_limit "${database_name}" 1
     # Ensure connections are restored even if init fails (crash, signal, etc.)
-    trap 'do_unblock_user_connections "${database_name}"' EXIT
+    trap 'do_unblock_connections users "${database_name}"' EXIT
     echo "> Initializing Odoo in database ${database_name}..."
     # Run Odoo directly (not via odoo_exec which uses exec and would
     # replace this process, preventing the connection limit restore).
@@ -266,7 +269,7 @@ case "${command}" in
       --no-xmlrpc \
       --stop-after-init
     trap - EXIT
-    do_unblock_user_connections "${database_name}"
+    do_unblock_connections users "${database_name}"
     ;;
 
   drop)
@@ -341,11 +344,7 @@ case "${command}" in
       exit 2
     fi
     require_pguser_password
-    case "${1}" in
-      all)   do_block_all_connections "${2}" ;;
-      users) do_block_user_connections "${2}" ;;
-      *)     echo "ERROR: Invalid target '${1}'. Expected 'all' or 'users'." >&2; exit 2 ;;
-    esac
+    do_block_connections "${1}" "${2}"
     ;;
 
   unblock)
@@ -354,11 +353,7 @@ case "${command}" in
       exit 2
     fi
     require_pguser_password
-    case "${1}" in
-      all)   do_unblock_all_connections "${2}" ;;
-      users) do_unblock_user_connections "${2}" ;;
-      *)     echo "ERROR: Invalid target '${1}'. Expected 'all' or 'users'." >&2; exit 2 ;;
-    esac
+    do_unblock_connections "${1}" "${2}"
     ;;
 
   *)
