@@ -69,33 +69,22 @@ RUN useradd -m -u 99910 -d "$HOME" odoo
 
 ENV PATH=$HOME/scripts/bin:$HOME/.local/bin:$PATH
 
-# configuration files
-COPY --chown=odoo:odoo config/paths.env /opt/odoo/config/paths.env
-COPY --chown=odoo:odoo config/constraints.txt /opt/odoo/config/constraints.txt
+# image defaults (baked in)
+COPY --chown=odoo:odoo config/ /opt/odoo/dist/
 
 # assets
 COPY --chown=odoo:odoo scripts/assets/pfbfer.zip /opt/odoo/scripts/assets/pfbfer.zip
 
 # scripts
-COPY --chown=odoo:odoo scripts/entrypoint.sh /opt/odoo/scripts/entrypoint.sh
-RUN chmod +x /opt/odoo/scripts/entrypoint.sh
-
 COPY --chown=odoo:odoo scripts/lib/common.sh /opt/odoo/scripts/lib/common.sh
-
-COPY --chown=odoo:odoo scripts/bin/initdb.sh /opt/odoo/scripts/bin/initdb
-RUN chmod +x /opt/odoo/scripts/bin/initdb
-COPY --chown=odoo:odoo scripts/bin/updatemodules.sh /opt/odoo/scripts/bin/updatemodules
-RUN chmod +x /opt/odoo/scripts/bin/updatemodules
-COPY --chown=odoo:odoo scripts/bin/shell.sh /opt/odoo/scripts/bin/shell
-RUN chmod +x /opt/odoo/scripts/bin/shell
-COPY --chown=odoo:odoo scripts/bin/fetchbasereqs.sh /opt/odoo/scripts/bin/fetchbasereqs
-RUN chmod +x /opt/odoo/scripts/bin/fetchbasereqs
-COPY --chown=odoo:odoo scripts/bin/fetchreqs.sh /opt/odoo/scripts/bin/fetchreqs
-RUN chmod +x /opt/odoo/scripts/bin/fetchreqs
-COPY --chown=odoo:odoo scripts/bin/fetchcode.sh /opt/odoo/scripts/bin/fetchcode
-RUN chmod +x /opt/odoo/scripts/bin/fetchcode
-COPY --chown=odoo:odoo scripts/bin/dbctl.sh /opt/odoo/scripts/bin/dbctl
-RUN chmod +x /opt/odoo/scripts/bin/dbctl
+COPY --chown=odoo:odoo --chmod=755 scripts/entrypoint.sh /opt/odoo/scripts/entrypoint.sh
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/updatemodules.sh /opt/odoo/scripts/bin/updatemodules
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/shell.sh /opt/odoo/scripts/bin/shell
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/fetchbasereqs.sh /opt/odoo/scripts/bin/fetchbasereqs
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/fetchreqs.sh /opt/odoo/scripts/bin/fetchreqs
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/fetchcode.sh /opt/odoo/scripts/bin/fetchcode
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/genaddonspath.py /opt/odoo/scripts/bin/genaddonspath
+COPY --chown=odoo:odoo --chmod=755 scripts/bin/db.sh /opt/odoo/scripts/bin/db
 
 USER odoo
 

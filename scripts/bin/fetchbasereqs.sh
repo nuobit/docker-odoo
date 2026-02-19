@@ -12,8 +12,6 @@ if [[ $# -eq 0 ]]; then
     click_odoo_contrib \
     git+https://github.com/OCA/openupgradelib.git
 else
-  echo "Unknown arguments!!"
-  echo ""
-  echo "Usage: ${script_name}"
+  echo "Usage: ${script_name}" >&2
   exit 2
 fi

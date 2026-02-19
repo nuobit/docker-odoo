@@ -136,25 +136,29 @@ This ensures:
 
 | Container Path | Repository File | Purpose |
 |----------------|-----------------|---------|
-| `/opt/odoo/entrypoint.sh` | `entrypoint.sh` | Container entrypoint |
-| `/opt/odoo/.local/lib/common.sh` | `lib/common.sh` | Shared functions and variables |
-| `/opt/odoo/.local/bin/initdb` | `scripts/initdb.sh` | Initialize database script |
-| `/opt/odoo/.local/bin/updatemodules` | `scripts/updatemodules.sh` | Update modules script |
-| `/opt/odoo/.local/bin/shell` | `scripts/shell.sh` | Interactive shell script |
-| `/opt/odoo/.local/bin/fetchbasereqs` | `scripts/fetchbasereqs.sh` | Fetch base requirements script |
-| `/opt/odoo/.local/bin/fetchreqs` | `scripts/fetchreqs.sh` | Fetch repo requirements script |
-| `/opt/odoo/.local/bin/fetchcode` | `scripts/fetchcode.sh` | Fetch git repositories script |
-| `/opt/odoo/.local/bin/dbctl` | `scripts/dbctl.sh` | Database management script |
-| `/etc/odoo/constraints.txt` | `constraints.txt` | Python package version constraints |
-| `/opt/odoo/pfbfer.zip` | `pfbfer.zip` | ReportLab Type1 fonts archive |
+| `/opt/odoo/scripts/entrypoint.sh` | `scripts/entrypoint.sh` | Container entrypoint |
+| `/opt/odoo/scripts/lib/common.sh` | `scripts/lib/common.sh` | Shared functions and variables |
+| `/opt/odoo/scripts/bin/updatemodules` | `scripts/bin/updatemodules.sh` | Update modules script |
+| `/opt/odoo/scripts/bin/shell` | `scripts/bin/shell.sh` | Interactive shell script |
+| `/opt/odoo/scripts/bin/fetchbasereqs` | `scripts/bin/fetchbasereqs.sh` | Fetch base requirements script |
+| `/opt/odoo/scripts/bin/fetchreqs` | `scripts/bin/fetchreqs.sh` | Fetch repo requirements script |
+| `/opt/odoo/scripts/bin/fetchcode` | `scripts/bin/fetchcode.sh` | Fetch git repositories script |
+| `/opt/odoo/scripts/bin/genaddonspath` | `scripts/bin/genaddonspath.py` | Generate addons_path from repos.yaml |
+| `/opt/odoo/scripts/bin/db` | `scripts/bin/db.sh` | Database management script |
+| `/opt/odoo/dist/defaults.env` | `config/defaults.env` | Image default configuration |
+| `/opt/odoo/dist/constraints.txt` | `config/constraints.txt` | Python package version constraints |
+| `/opt/odoo/scripts/assets/pfbfer.zip` | `scripts/assets/pfbfer.zip` | ReportLab Type1 fonts archive |
 
 **Runtime directories (created at runtime or via volume mounts):**
 
 | Path | Purpose |
 |------|---------|
+| `/opt/odoo/config/` | Instance configuration directory (bind-mounted) |
+| `/opt/odoo/config/odoo.conf` | Odoo configuration file — at minimum set `db_host`, `db_user`, `db_password` and `admin_passwd` |
+| `/opt/odoo/config/repos.yaml` | Git-aggregator config — contains all OCA repos with a `10.0` branch and actual Odoo modules (see [Localization repos](#localization-repos-l10n)) |
+| `/opt/odoo/config/settings.env` | Instance-level overrides (optional) |
 | `/opt/odoo/src` | Odoo source code (git-aggregated, typically volume-mounted) |
 | `/var/lib/odoo` | Odoo data directory (filestore, sessions, typically volume-mounted) |
-| `/etc/odoo/odoo.conf` | Odoo configuration file (typically volume-mounted) |
 
 **Note:** Paths shown are **inside the container**. Use volume mounts in docker-compose to map host directories to container paths.
 
@@ -167,6 +171,7 @@ The container uses a **stateful bootstrap mechanism**:
 - On first container start:
   - fetches base Python requirements
   - fetches git repositories using `git-aggregator`
+  - generates `addons_path` from repos.yaml and updates `odoo.conf`
   - fetches Odoo Python requirements
   - installs ReportLab Type1 fonts
 - On subsequent restarts:
@@ -186,76 +191,58 @@ These scripts can be executed inside the running container:
 
 | Script | Description | Usage |
 |--------|------------|-------|
-| `initdb` | Initialize database | `docker compose exec <container> initdb <database> [nodemo]` |
+| `db` | Database management | `docker compose exec <container> db <command> [args...]` |
 | `updatemodules` | Update modules | `docker compose exec <container> updatemodules <database> <all\|module_list\|changed>` |
 | `shell` | Interactive Odoo shell | `docker compose exec <container> shell <database>` |
 | `fetchbasereqs` | Fetch base requirements | `docker compose exec <container> fetchbasereqs` |
 | `fetchreqs` | Fetch repo requirements | `docker compose exec <container> fetchreqs <repo_path>` |
 | `fetchcode` | Fetch git repositories | `docker compose exec <container> fetchcode [addon_path] [jobs]` |
-| `dbctl` | Database management | `docker compose exec <container> dbctl <command> [args...]` |
 
-### Database management with `dbctl`
+### Database management with `db`
 
-The `dbctl` script provides database management commands:
+The `db` script provides database management commands:
 
 ```bash
-# Create a database with unaccent extension
-docker compose exec <container> dbctl create <database>
+# Create a database (with unaccent extension):
+docker compose exec <container> db create <database>
 
-# Create a database with specific owner
-docker compose exec <container> dbctl create <database> <owner>
+# Initialize Odoo base module in database:
+docker compose exec <container> db init <database>
+docker compose exec <container> db init <database> demo   # with demo data
 
-# Drop a database
-docker compose exec <container> dbctl drop <database>
+# Drop a database:
+docker compose exec <container> db drop <database>
 
-# Reset (drop and recreate) a database
-docker compose exec <container> dbctl reset <database> [owner]
+# Reset (drop and recreate) a database:
+docker compose exec <container> db reset <database>
 
-# Create a PostgreSQL user
-docker compose exec <container> dbctl createuser <username> [password]
+# List databases owned by DB_OWNER:
+docker compose exec <container> db list
+
+# List PostgreSQL users:
+docker compose exec <container> db users
+
+# Create/drop the DB owner user:
+docker compose exec <container> db createuser
+docker compose exec <container> db dropuser
 ```
 
-#### Authentication options for `dbctl`
+#### Configuration
 
-**Option 1: Interactive password prompt (most secure)**
+Connection settings are read from `odoo.conf` (`db_host`, `db_user`, `db_password`). Admin credentials come from `defaults.env` (or overridden in `settings.env`):
+
+| Variable | Source | Description |
+|---|---|---|
+| `DB_HOST` | `db_host` in odoo.conf | PostgreSQL host |
+| `DB_PGUSER` | `defaults.env` | PostgreSQL admin user |
+| `DB_PGDB` | `defaults.env` | PostgreSQL maintenance database |
+| `DB_PGUSER_PASSWORD` | `settings.env` | PostgreSQL admin password (prompted if unset) |
+| `DB_FORCE` | `defaults.env` | Skip database name confirmation on drop/reset |
+
+The `-f` / `--force` flag can also be used to skip the name confirmation:
 ```bash
-docker compose exec -it <container> dbctl create mydb
-# You will be prompted for the PostgreSQL password
+docker compose exec <container> db -f drop <database>
 ```
-
-**Option 2: Environment variable (less secure, visible in process list)**
-```bash
-docker compose exec -e PGPASSWORD=yourpass <container> dbctl create mydb
-```
-
-**Option 3: .pgpass file (recommended for automation)**
-Mount a `.pgpass` file in your docker-compose:
-```yaml
-volumes:
-  - ./.pgpass:/opt/odoo/.pgpass:ro
-```
-
-Format of `.pgpass`:
-```
-hostname:port:database:username:password
-# Example:
-db:5432:*:postgres:yourpass
-```
-
-Set permissions: `chmod 600 .pgpass`
-
-**Option 4: Docker environment variables (set in docker-compose)**
-```yaml
-environment:
-  PGHOST: db
-  PGUSER: postgres
-  PGPASSWORD: yourpass
-```
-
-**Default connection parameters:**
-- `PGHOST`: `db` (typical docker-compose database service name)
-- `PGUSER`: `postgres`
-- `PGPASSWORD`: Not set (will prompt if not provided)
 
 **Interactive shell access:**
 ```bash
@@ -270,79 +257,126 @@ docker compose exec -T <container> shell <database> < myscript.py
 
 ---
 
-## Example docker-compose configuration
+## Deploying an instance
+
+This repository is for **building the Docker image**, not for running containers directly. To deploy an instance, copy the template files from `deploy/` to your instance directory and customize them.
+
+### 1. Copy template files
+
+```bash
+# Create the instance directory and copy all deploy files
+cp -r deploy/* /srv/docker/stack/odoo10-1/
+
+# Rename the settings template
+mv /srv/docker/stack/odoo10-1/config/settings.env.example \
+   /srv/docker/stack/odoo10-1/config/settings.env
+
+# Create data directories
+mkdir -p /srv/docker/data/odoo10-1/{src,data}
+
+# Set ownership
+sudo chown -R 99910:99910 /srv/docker/stack/odoo10-1/config
+sudo chown -R 99910:99910 /srv/docker/data/odoo10-1
+```
+
+### 2. Customize configuration
+
+Edit the copied files for your instance:
+- `config/odoo.conf` — at minimum set `db_host`, `db_user`, `db_password` and `admin_passwd`
+- `config/repos.yaml` — enable/disable OCA repos as needed
+- `config/settings.env` — set `DB_PGUSER_PASSWORD` and any overrides
+- `docker-compose.yml` — adjust image tag, ports, network name
+
+### 3. Start the container
+
+```bash
+cd /srv/docker/stack/odoo10-1
+docker compose up -d
+```
+
+### Directory structure convention
+
+The `deploy/` folder mirrors the target instance layout:
+
+```
+deploy/                              /srv/docker/stack/odoo10-1/
+├── docker-compose.yml         →     ├── docker-compose.yml
+└── config/                    →     └── config/  (bind-mounted to /opt/odoo/config/)
+    ├── odoo.conf                        ├── odoo.conf
+    ├── repos.yaml                       ├── repos.yaml
+    └── settings.env.example             └── settings.env
+```
+
+Runtime data is stored separately:
+
+```
+/srv/docker/data/odoo10-1/
+├── src/         # Source code (git-aggregated)
+└── data/        # Odoo filestore, sessions, etc.
+```
+
+- `/srv/docker/stack/<container>/` — **Configuration** (version-controlled, backed up separately)
+- `/srv/docker/data/<container>/` — **Runtime data** (large, requires regular backups)
+
+**Note:** The `/srv/docker/` base path and the folder names are **arbitrary conventions**—use any directory structure that fits your organization's standards.
+
+### Example docker-compose configuration
 
 ```yaml
 services:
-  odoo10:
+  odoo10-1:
+    container_name: odoo10-1
     image: ghcr.io/<org>/odoo-10.0:1.0.0
-    container_name: odoo10
     user: "99910:99910"
     ports:
       - "127.0.0.1:8010:8069"
     volumes:
-      - ./odoo.conf:/etc/odoo/odoo.conf:ro
-      - ./src:/opt/odoo/src
-      - ./repos.yaml:/opt/odoo/src/repos.yaml:ro
-      - ./data:/var/lib/odoo
-    networks:
-      - odoo-net
+      - /srv/docker/stack/odoo10-1/config:/opt/odoo/config
+      - /srv/docker/data/odoo10-1/src:/opt/odoo/src
+      - /srv/docker/data/odoo10-1/data:/var/lib/odoo
+    networks: [pg96-1-net]
 
 networks:
-  odoo-net:
+  pg96-1-net:
     external: true
 ```
-
-**Note:** This example uses **relative paths** (`./odoo.conf`, `./src`, `./data`) for simplicity. In production, consider using **absolute paths** for clarity:
-- Config: `/srv/docker/stack/odoo10/odoo.conf`
-- Source: `/srv/docker/data/odoo10/src`
-- Data: `/srv/docker/data/odoo10/data`
-
-**Directory structure convention:**
-
-```
-/srv/docker/
-├── stack/              # Configuration files
-│   ├── odoo10-1/       # Container-specific folder
-│   │   ├── odoo.conf
-│   │   ├── repos.yaml
-│   │   └── docker-compose.yml
-│   └── odoo10-2/       # Another container
-│       └── ...
-└── data/               # Runtime data
-    ├── odoo10-1/       # Container-specific folder
-    │   ├── src/        # Source code
-    │   └── data/       # Database filestore, sessions, etc.
-    └── odoo10-2/
-        └── ...
-```
-
-- `/srv/docker/stack/<container-name>/` — **Configuration files**
-  - Read-only files that define how the container runs
-  - Usually version-controlled and backed up separately
-  - Examples: odoo.conf, repos.yaml, docker-compose.yml
-  
-- `/srv/docker/data/<container-name>/` — **Runtime data**
-  - Large, frequently changing data
-  - Requires regular backups
-  - Not typically version-controlled
-  - Examples: src/ (git repos), data/ (Odoo filestore)
-
-**Note:** The `/srv/docker/` base path and the folder names are **arbitrary conventions**—use any directory structure that fits your organization's standards.
 
 ---
 
 ## Environment variables
 
+### Image defaults (`config/defaults.env`)
+
+Baked into the image at `/opt/odoo/dist/defaults.env` (from `config/defaults.env` in the repo). Can be overridden by instance `settings.env`.
+
 | Variable | Default | Description |
-|--------|--------|------------|
-| `DAT` | `/var/lib/odoo` | Data directory |
-| `SRC` | `/opt/odoo/src` | Source directory |
-| `CONF_BASE` | `/etc/odoo` | Config base path |
-| `CONF` | `/etc/odoo/odoo.conf` | Odoo config file |
-| `SRC_REPOS_FILENAME` | `repos.yaml` | Git-aggregator config |
-| `ODOO_BIN` | `odoo-bin` | Odoo executable |
-| `PYTHON` | `python` | Python interpreter |
+|---|---|---|
+| `PYTHON_BIN` | `/usr/bin/python` | Python interpreter |
+| `DIST_DIR` | _(auto)_ | Image dist directory (`/opt/odoo/dist/`) |
+| `DIST_CONSTRAINTS` | `${DIST_DIR}/constraints.txt` | pip constraints file |
+| `INSTANCE_DIR` | `${HOME}/config` | Instance config directory (bind-mounted) |
+| `INSTANCE_SETTINGS` | `${INSTANCE_DIR}/settings.env` | Instance overrides file |
+| `INSTANCE_REPOS` | `${INSTANCE_DIR}/repos.yaml` | Git-aggregator config |
+| `SRC_DIR` | `${HOME}/src` | Source code directory |
+| `SRC_ODOO_REPO_DIR` | `odoo` | Odoo repo directory name |
+| `ODOO_DIR` | `${SRC_DIR}/odoo` | Odoo source directory |
+| `ODOO_BIN` | `${ODOO_DIR}/odoo-bin` | Odoo executable |
+| `ODOO_CONF` | `${INSTANCE_DIR}/odoo.conf` | Odoo config file |
+| `ODOO_DATA_DIR` | `/var/lib/odoo` | Odoo data directory |
+| `DB_PGUSER` | `postgres` | PostgreSQL admin user |
+| `DB_PGDB` | `postgres` | PostgreSQL maintenance database |
+| `DB_FORCE` | `false` | Skip name confirmation on drop/reset |
+
+### Instance overrides (`settings.env`)
+
+Bind-mounted at `/opt/odoo/config/settings.env`. Sourced after `defaults.env`, overrides any value. Changes take effect on next script execution or container restart — no image rebuild or container recreation needed.
+
+A reference template is available in the `deploy/` directory of the project repository.
+
+| Variable | Description |
+|---|---|
+| `DB_PGUSER_PASSWORD` | PostgreSQL admin password (prompted if unset) |
+| `DB_FORCE` | Skip database name confirmation on drop/reset |
 
 ---
 
@@ -396,6 +430,44 @@ docker push ghcr.io/<org>/odoo-10.0:1.0.0
    - Build and test locally first
    - Only push to registry after validation
    - Tag releases from tested commits only
+
+---
+
+## Localization repos (l10n)
+
+The `repos.yaml` file includes all OCA addon repositories that have a `10.0` branch with actual Odoo modules. **Localization repos are commented out by default** to avoid fetching unnecessary country-specific code.
+
+To enable a localization, edit your instance `repos.yaml` and uncomment the relevant `l10n-*` block. For example, to enable Spanish localization:
+
+```yaml
+./oca/l10n-spain:
+    remotes:
+        oca: https://github.com/OCA/l10n-spain.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+```
+
+After uncommenting, re-run `fetchcode` to clone the newly enabled repos.
+
+---
+
+## OpenUpgrade (database migration)
+
+The `repos.yaml` file includes a **commented-out** entry for [OCA/OpenUpgrade](https://github.com/OCA/OpenUpgrade). OpenUpgrade is a patched fork of Odoo that adds migration scripts for upgrading a database from a previous Odoo version (e.g. 9.0 to 10.0).
+
+**When to enable it:**
+- You are migrating an existing database from Odoo 9.0 (or earlier) to 10.0
+- You need the OpenUpgrade migration scripts to transform data and schema
+
+**How to use:**
+1. Uncomment the `./openupgrade` block in `repos.yaml`
+2. Run `fetchcode` to clone the OpenUpgrade repo
+3. Run the migration following the [OpenUpgrade documentation](https://github.com/OCA/OpenUpgrade/blob/10.0/README.md)
+4. After a successful migration, **comment it back out** and restart normally with the standard Odoo/OCB source
+
+**Do not leave OpenUpgrade enabled in normal operation** — it is only needed during the migration process itself.
 
 ---
 

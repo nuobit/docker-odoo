@@ -10,8 +10,6 @@ if [[ $# -eq 1 ]]; then
   pip_install \
     --requirement "${SRC_DIR}/${repo_path}/requirements.txt"
 else
-  echo "Unknown arguments!!"
-  echo ""
-  echo "Usage: ${script_name} <repo_path>"
+  echo "Usage: ${script_name} <repo_path>" >&2
   exit 2
 fi

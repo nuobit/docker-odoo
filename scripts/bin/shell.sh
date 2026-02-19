@@ -9,11 +9,9 @@ if [[ $# -eq 1 ]]; then
   database_name="${1}"
   odoo_exec shell \
     --database "${database_name}" \
-    --no-xmlrpc
+    --xmlrpc-port "${ODOO_SHELL_PORT}"
 else
-  echo "Unknown arguments!!"
-  echo ""
-  echo "Usage: ${script_name} <database>"
-  echo "  To run a Python script via stdin: ${script_name} <database> < script.py"
+  echo "Usage: ${script_name} <database>" >&2
+  echo "  To run a Python script via stdin: ${script_name} <database> < script.py" >&2
   exit 2
 fi

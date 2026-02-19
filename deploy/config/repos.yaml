@@ -1,0 +1,1024 @@
+# Git-aggregator configuration
+# See: https://github.com/acsone/git-aggregator
+#
+# This file contains all OCA repositories that have a 10.0 branch with
+# actual Odoo modules. Repos with empty branches (no modules) are excluded.
+#
+# Each top-level key is a target directory relative to SRC_DIR.
+# The entrypoint runs `gitaggregate -c repos.yaml aggregate` to fetch all repos.
+# Then `genaddonspath` reads this file to build addons_path in odoo.conf.
+
+######### ODOO/OCB ##################
+./odoo:
+    remotes:
+        odoo: https://github.com/odoo/odoo.git
+        ocb: https://github.com/OCA/OCB.git
+    target:
+        odoo 10.0
+    merges:
+        - odoo 10.0
+        # Pull a specific PR (replace <remote> and <number>):
+        # - oca refs/pull/<number>/head
+
+######### OPENUPGRADE (database migration) ##########
+# Enable this ONLY when migrating the database from a previous Odoo version.
+# OpenUpgrade replaces the Odoo source with a patched fork that includes
+# migration scripts. After a successful migration, disable it and switch
+# back to the standard Odoo/OCB target above.
+#
+# ./openupgrade:
+#     remotes:
+#         oca: https://github.com/OCA/OpenUpgrade.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+
+######### VENDOR ADDONS ############
+./vendor/nuobit-odoo-addons:
+    remotes:
+        nuobit: https://github.com/nuobit/odoo-addons.git
+    target:
+        nuobit 10.0
+    merges:
+        - nuobit 10.0
+
+######### OCA LOCALIZATION ADDONS (l10n) ############
+# Uncomment the localizations you need for your deployment.
+#
+# ./oca/l10n-argentina:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-argentina.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-belgium:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-belgium.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-brazil:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-brazil.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-canada:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-canada.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-china:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-china.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-croatia:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-croatia.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-ecuador:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-ecuador.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-ethiopia:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-ethiopia.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-finland:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-finland.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-france:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-france.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-germany:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-germany.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-italy:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-italy.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-luxemburg:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-luxemburg.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-morocco:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-morocco.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-netherlands:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-netherlands.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-slovenia:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-slovenia.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-spain:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-spain.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-switzerland:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-switzerland.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-taiwan:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-taiwan.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-thailand:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-thailand.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/l10n-usa:
+#     remotes:
+#         oca: https://github.com/OCA/l10n-usa.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA ACCOUNT & FINANCE #############
+./oca/account-analytic:
+    remotes:
+        oca: https://github.com/OCA/account-analytic.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/account-budgeting:
+#     remotes:
+#         oca: https://github.com/OCA/account-budgeting.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/account-closing:
+#     remotes:
+#         oca: https://github.com/OCA/account-closing.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/account-consolidation:
+#     remotes:
+#         oca: https://github.com/OCA/account-consolidation.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/account-financial-reporting:
+#     remotes:
+#         oca: https://github.com/OCA/account-financial-reporting.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/account-financial-tools:
+    remotes:
+        oca: https://github.com/OCA/account-financial-tools.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/account-fiscal-rule:
+    remotes:
+        oca: https://github.com/OCA/account-fiscal-rule.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/account-invoice-reporting:
+    remotes:
+        oca: https://github.com/OCA/account-invoice-reporting.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/account-invoicing:
+    remotes:
+        oca: https://github.com/OCA/account-invoicing.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/account-payment:
+    remotes:
+        oca: https://github.com/OCA/account-payment.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/account-reconcile:
+    remotes:
+        oca: https://github.com/OCA/account-reconcile.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/bank-payment:
+#     remotes:
+#         oca: https://github.com/OCA/bank-payment.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/bank-statement-import:
+    remotes:
+        oca: https://github.com/OCA/bank-statement-import.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/credit-control:
+    remotes:
+        oca: https://github.com/OCA/credit-control.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/currency:
+    remotes:
+        oca: https://github.com/OCA/currency.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/donation:
+#     remotes:
+#         oca: https://github.com/OCA/donation.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/intrastat-extrastat:
+#     remotes:
+#         oca: https://github.com/OCA/intrastat-extrastat.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/margin-analysis:
+#     remotes:
+#         oca: https://github.com/OCA/margin-analysis.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/mis-builder:
+#     remotes:
+#         oca: https://github.com/OCA/mis-builder.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA SALE & CRM #############
+# ./oca/commission:
+#     remotes:
+#         oca: https://github.com/OCA/commission.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/contract:
+    remotes:
+        oca: https://github.com/OCA/contract.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/crm:
+    remotes:
+        oca: https://github.com/OCA/crm.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/partner-contact:
+#     remotes:
+#         oca: https://github.com/OCA/partner-contact.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/pos:
+    remotes:
+        oca: https://github.com/OCA/pos.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/sale-financial:
+#     remotes:
+#         oca: https://github.com/OCA/sale-financial.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/sale-reporting:
+    remotes:
+        oca: https://github.com/OCA/sale-reporting.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/sale-workflow:
+    remotes:
+        oca: https://github.com/OCA/sale-workflow.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+######### OCA PURCHASE #############
+# ./oca/purchase-reporting:
+#     remotes:
+#         oca: https://github.com/OCA/purchase-reporting.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/purchase-workflow:
+    remotes:
+        oca: https://github.com/OCA/purchase-workflow.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+######### OCA STOCK & LOGISTICS #############
+# ./oca/delivery-carrier:
+#     remotes:
+#         oca: https://github.com/OCA/delivery-carrier.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/rma:
+#     remotes:
+#         oca: https://github.com/OCA/rma.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/stock-logistics-barcode:
+#     remotes:
+#         oca: https://github.com/OCA/stock-logistics-barcode.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/stock-logistics-reporting:
+#     remotes:
+#         oca: https://github.com/OCA/stock-logistics-reporting.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/stock-logistics-tracking:
+#     remotes:
+#         oca: https://github.com/OCA/stock-logistics-tracking.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/stock-logistics-transport:
+#     remotes:
+#         oca: https://github.com/OCA/stock-logistics-transport.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/stock-logistics-warehouse:
+#     remotes:
+#         oca: https://github.com/OCA/stock-logistics-warehouse.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/stock-logistics-workflow:
+    remotes:
+        oca: https://github.com/OCA/stock-logistics-workflow.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/wms:
+#     remotes:
+#         oca: https://github.com/OCA/wms.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA PRODUCT & MANUFACTURING #############
+# ./oca/manufacture:
+#     remotes:
+#         oca: https://github.com/OCA/manufacture.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/manufacture-reporting:
+#     remotes:
+#         oca: https://github.com/OCA/manufacture-reporting.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/odoo-pim:
+#     remotes:
+#         oca: https://github.com/OCA/odoo-pim.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/product-attribute:
+    remotes:
+        oca: https://github.com/OCA/product-attribute.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/product-variant:
+    remotes:
+        oca: https://github.com/OCA/product-variant.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+######### OCA HR & PROJECT #############
+# ./oca/business-requirement:
+#     remotes:
+#         oca: https://github.com/OCA/business-requirement.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/hr:
+#     remotes:
+#         oca: https://github.com/OCA/hr.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/project:
+    remotes:
+        oca: https://github.com/OCA/project.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/project-agile:
+#     remotes:
+#         oca: https://github.com/OCA/project-agile.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/project-reporting:
+#     remotes:
+#         oca: https://github.com/OCA/project-reporting.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/timesheet:
+#     remotes:
+#         oca: https://github.com/OCA/timesheet.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA WEBSITE & E-COMMERCE #############
+# ./oca/apps-store:
+#     remotes:
+#         oca: https://github.com/OCA/apps-store.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/e-commerce:
+#     remotes:
+#         oca: https://github.com/OCA/e-commerce.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/search-engine:
+#     remotes:
+#         oca: https://github.com/OCA/search-engine.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/website:
+    remotes:
+        oca: https://github.com/OCA/website.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/website-cms:
+#     remotes:
+#         oca: https://github.com/OCA/website-cms.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA MAINTENANCE #############
+# ./oca/maintenance:
+#     remotes:
+#         oca: https://github.com/OCA/maintenance.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/management-system:
+#     remotes:
+#         oca: https://github.com/OCA/management-system.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA SERVER & TOOLS #############
+./oca/community-data-files:
+    remotes:
+        oca: https://github.com/OCA/community-data-files.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/connector:
+    remotes:
+        oca: https://github.com/OCA/connector.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/edi:
+#     remotes:
+#         oca: https://github.com/OCA/edi.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/knowledge:
+#     remotes:
+#         oca: https://github.com/OCA/knowledge.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/multi-company:
+    remotes:
+        oca: https://github.com/OCA/multi-company.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/operating-unit:
+#     remotes:
+#         oca: https://github.com/OCA/operating-unit.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/queue:
+    remotes:
+        oca: https://github.com/OCA/queue.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/reporting-engine:
+#     remotes:
+#         oca: https://github.com/OCA/reporting-engine.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/report-print-send:
+#     remotes:
+#         oca: https://github.com/OCA/report-print-send.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/rest-framework:
+#     remotes:
+#         oca: https://github.com/OCA/rest-framework.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/server-auth:
+#     remotes:
+#         oca: https://github.com/OCA/server-auth.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/server-tools:
+    remotes:
+        oca: https://github.com/OCA/server-tools.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/server-ux:
+    remotes:
+        oca: https://github.com/OCA/server-ux.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+./oca/social:
+    remotes:
+        oca: https://github.com/OCA/social.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+# ./oca/storage:
+#     remotes:
+#         oca: https://github.com/OCA/storage.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+./oca/web:
+    remotes:
+        oca: https://github.com/OCA/web.git
+    target:
+        oca 10.0
+    merges:
+        - oca 10.0
+
+######### OCA GENERAL ADDONS #############
+# ./oca/calendar:
+#     remotes:
+#         oca: https://github.com/OCA/calendar.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/data-protection:
+#     remotes:
+#         oca: https://github.com/OCA/data-protection.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/event:
+#     remotes:
+#         oca: https://github.com/OCA/event.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/geospatial:
+#     remotes:
+#         oca: https://github.com/OCA/geospatial.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/survey:
+#     remotes:
+#         oca: https://github.com/OCA/survey.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA CONNECTORS #############
+# Uncomment the connector for your specific integration.
+#
+# ./oca/connector-accountedge:
+#     remotes:
+#         oca: https://github.com/OCA/connector-accountedge.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-cmis:
+#     remotes:
+#         oca: https://github.com/OCA/connector-cmis.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-ecommerce:
+#     remotes:
+#         oca: https://github.com/OCA/connector-ecommerce.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-interfaces:
+#     remotes:
+#         oca: https://github.com/OCA/connector-interfaces.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-lengow:
+#     remotes:
+#         oca: https://github.com/OCA/connector-lengow.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-magento:
+#     remotes:
+#         oca: https://github.com/OCA/connector-magento.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-prestashop:
+#     remotes:
+#         oca: https://github.com/OCA/connector-prestashop.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-sage:
+#     remotes:
+#         oca: https://github.com/OCA/connector-sage.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-telephony:
+#     remotes:
+#         oca: https://github.com/OCA/connector-telephony.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/connector-woocommerce:
+#     remotes:
+#         oca: https://github.com/OCA/connector-woocommerce.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+
+######### OCA VERTICALS #############
+# Uncomment the vertical for your specific industry.
+#
+# ./oca/vertical-abbey:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-abbey.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-association:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-association.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-community:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-community.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-construction:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-construction.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-edition:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-edition.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-education:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-education.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-hotel:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-hotel.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-isp:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-isp.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-medical:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-medical.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-ngo:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-ngo.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
+# ./oca/vertical-travel:
+#     remotes:
+#         oca: https://github.com/OCA/vertical-travel.git
+#     target:
+#         oca 10.0
+#     merges:
+#         - oca 10.0
+#
