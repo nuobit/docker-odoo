@@ -98,8 +98,9 @@ do_set_datallowconn() {
   local value="${2}"
   echo "> Setting datallowconn = ${value} on ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "UPDATE pg_database SET datallowconn = ${value} WHERE datname = '${dbname}';" \
-    > /dev/null 2>&1 || true
+    -v "dbname=${dbname}" \
+    -c "UPDATE pg_database SET datallowconn = ${value} WHERE datname = :'dbname';" \
+    > /dev/null || true
   echo "< Done!!"
 }
 
@@ -112,8 +113,9 @@ do_set_user_connection_limit() {
   local limit="${2}"
   echo "> Setting user connection limit to ${limit} on ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "ALTER DATABASE \"${dbname}\" WITH CONNECTION LIMIT ${limit};" \
-    > /dev/null 2>&1 || true
+    -v "dbname=${dbname}" \
+    -c "ALTER DATABASE :\"dbname\" WITH CONNECTION LIMIT ${limit};" \
+    > /dev/null || true
   echo "< Done!!"
 }
 
@@ -156,8 +158,9 @@ do_terminate_all_connections() {
   local dbname="${1}"
   echo "> Terminating all active connections to ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbname}' AND pid <> pg_backend_pid();" \
-    > /dev/null 2>&1 || true
+    -v "dbname=${dbname}" \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();" \
+    > /dev/null || true
   echo "< Done!!"
 }
 
@@ -295,6 +298,10 @@ case "${command}" in
     ;;
 
   list)
+    if [[ $# -ne 0 ]]; then
+      echo "Usage: ${script_name} list" >&2
+      exit 2
+    fi
     if ! pg_owner -c "SELECT datname AS \"Database\" FROM pg_database WHERE pg_catalog.pg_get_userbyid(datdba) = current_user ORDER BY datname;"; then
       echo "" >&2
       echo "Failed to list databases." >&2
@@ -305,6 +312,10 @@ case "${command}" in
     ;;
 
   users)
+    if [[ $# -ne 0 ]]; then
+      echo "Usage: ${script_name} users" >&2
+      exit 2
+    fi
     if ! pg_owner -c "\du"; then
       echo "" >&2
       echo "Failed to list users." >&2
