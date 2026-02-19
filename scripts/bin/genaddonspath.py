@@ -75,27 +75,26 @@ def update_odoo_conf_addons_path(odoo_conf, addons_path):
     with io.open(odoo_conf, 'r', encoding='utf-8') as f:
         odoo_conf_content = f.read()
 
-    # Check if there's duplicate addons_path key
-    # It has to be on a separate check before replacement, otherwise
-    # we might end up with multiple addons_path lines after replacement
-    duplicate_pattern = r'^(\s*addons_path\s*=\s*)'
-    duplicated = re.findall(duplicate_pattern, odoo_conf_content, flags=re.MULTILINE)
-    if len(duplicated) > 1:
-        raise Exception("ERROR: Multiple addons_path lines found in odoo.conf. Please remove duplicates.")
-
-    # Replace addons_path line (matches "addons_path = ..." with any whitespace)
-    pattern = r'^(\s*addons_path\s*=\s*).*$'
+    # Find all addons_path lines.
+    # Use [ \t] instead of \s to avoid matching \n (which \s includes),
+    # otherwise an empty "addons_path =" would eat the next line.
+    pattern = r'^([ \t]*addons_path[ \t]*=[ \t]*).*$'
     matches = list(re.finditer(pattern, odoo_conf_content, flags=re.MULTILINE))
-    m = matches[-1] if matches else None  # Get the last match for addons_path
-    if m:
-        key = m.group(1).rstrip()
-    else:
-        key = 'addons_path ='
 
-    replacement = r'%s %s' % (key, addons_path)
-
-    if m:
-        odoo_conf_content = re.sub(pattern, replacement, odoo_conf_content, flags=re.MULTILINE)
+    if matches:
+        # Update the last match, remove all earlier duplicates.
+        # Process in reverse order to preserve string offsets.
+        last = matches[-1]
+        key = last.group(1).rstrip()
+        replacement = '%s %s' % (key, addons_path)
+        for i, m in reversed(list(enumerate(matches))):
+            if i == len(matches) - 1:
+                odoo_conf_content = odoo_conf_content[:m.start()] + replacement + odoo_conf_content[m.end():]
+            else:
+                end = m.end()
+                if end < len(odoo_conf_content) and odoo_conf_content[end] == '\n':
+                    end += 1
+                odoo_conf_content = odoo_conf_content[:m.start()] + odoo_conf_content[end:]
     else:
         # addons_path doesn't exist, add it to [options] section
         options_pattern = r'(\[options\])'
