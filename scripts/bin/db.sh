@@ -302,13 +302,11 @@ case "${command}" in
       echo "Usage: ${script_name} list" >&2
       exit 2
     fi
-    if ! pg_owner -c "SELECT datname AS \"Database\" FROM pg_database WHERE pg_catalog.pg_get_userbyid(datdba) = current_user ORDER BY datname;"; then
-      echo "" >&2
-      echo "Failed to list databases." >&2
-      echo "ERROR: Connection failed. User '${DB_OWNER}' probably does not exist." >&2
-      echo "You need to have the DB Odoo user '${DB_OWNER}' created to get the list of databases." >&2
-      echo "Try running: ${script_name} createuser" >&2
-      exit 1
+    if ! pg_owner -c "SELECT datname AS \"Database\" FROM pg_database WHERE pg_catalog.pg_get_userbyid(datdba) = current_user ORDER BY datname;" 2>/dev/null; then
+      echo "WARNING: User '${DB_OWNER}' does not exist. Falling back to '${DB_PGUSER}'." >&2
+      require_pguser_password
+      pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
+        -c "SELECT datname AS \"Database\" FROM pg_database WHERE NOT datistemplate ORDER BY datname;"
     fi
     ;;
 
@@ -317,8 +315,11 @@ case "${command}" in
       echo "Usage: ${script_name} users" >&2
       exit 2
     fi
-    require_pguser_password
-    pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -c "\du"
+    if ! pg_owner -c "\du" 2>/dev/null; then
+      echo "WARNING: User '${DB_OWNER}' does not exist. Falling back to '${DB_PGUSER}'." >&2
+      require_pguser_password
+      pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -c "\du"
+    fi
     ;;
 
   createuser)
