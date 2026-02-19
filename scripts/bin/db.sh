@@ -249,6 +249,8 @@ case "${command}" in
     do_block_user_connections "${database_name}"
     do_terminate_all_connections "${database_name}"
     do_set_user_connection_limit "${database_name}" 1
+    # Ensure connections are restored even if init fails (crash, signal, etc.)
+    trap 'do_unblock_user_connections "${database_name}"' EXIT
     echo "> Initializing Odoo in database ${database_name}..."
     # Run Odoo directly (not via odoo_exec which uses exec and would
     # replace this process, preventing the connection limit restore).
@@ -259,6 +261,7 @@ case "${command}" in
       "${demo_args[@]}" \
       --no-xmlrpc \
       --stop-after-init
+    trap - EXIT
     do_unblock_user_connections "${database_name}"
     ;;
 
