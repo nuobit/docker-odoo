@@ -356,6 +356,7 @@ case "${command}" in
     fi
     require_pguser_password
     do_block_connections "${1}" "${2}"
+    do_terminate_all_connections "${2}"
     ;;
 
   unblock)
