@@ -134,10 +134,13 @@ do_unblock_user_connections() {
 }
 
 # Terminate all active connections to a database.
-# Usage: do_terminate_connections <dbname>
-do_terminate_connections() {
+# Excludes the current psql session (pg_backend_pid) because if the target
+# database name matches DB_PGDB (e.g., both are "postgres"), the session
+# running this query would otherwise terminate itself.
+# Usage: do_terminate_all_connections <dbname>
+do_terminate_all_connections() {
   local dbname="${1}"
-  echo "> Terminating active connections to ${dbname}..."
+  echo "> Terminating all active connections to ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
     -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbname}' AND pid <> pg_backend_pid();" \
     > /dev/null 2>&1 || true
@@ -149,7 +152,7 @@ do_terminate_connections() {
 do_drop_db() {
   local dbname="${1}"
   do_block_all_connections "${dbname}"
-  do_terminate_connections "${dbname}"
+  do_terminate_all_connections "${dbname}"
   echo "> Dropping database ${dbname}..."
   pg_admin dropdb -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${dbname}" || {
     echo "Failed to drop database." >&2
