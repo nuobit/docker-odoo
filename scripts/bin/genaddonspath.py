@@ -2,6 +2,7 @@
 """
 Generate addons_path parameter for odoo.conf from repos.yaml and update odoo.conf
 """
+import io
 import re
 import os
 import pipes
@@ -67,7 +68,7 @@ def get_repos_yaml_addons_path(repos_yaml, base_dir, order=None, check_existence
 
 
 def update_odoo_conf_addons_path(odoo_conf, addons_path):
-    with open(odoo_conf, 'r') as f:
+    with io.open(odoo_conf, 'r', encoding='utf-8') as f:
         odoo_conf_content = f.read()
 
     # Check if there's duplicate addons_path key
@@ -106,7 +107,7 @@ def update_odoo_conf_addons_path(odoo_conf, addons_path):
             odoo_conf_content = '[options]\naddons_path = {}\n\n'.format(addons_path) + odoo_conf_content
 
     # Write back
-    with open(odoo_conf, 'w') as f:
+    with io.open(odoo_conf, 'w', encoding='utf-8') as f:
         f.write(odoo_conf_content)
 
 
