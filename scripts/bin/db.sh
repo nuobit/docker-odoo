@@ -34,6 +34,10 @@ usage() {
   echo "  init <dbname> [demo]           Initialize Odoo base module in database"
   echo "  drop <dbname>                  Drop a database (terminates active connections)"
   echo "  reset <dbname>                 Drop and recreate a database (terminates active connections)"
+  echo "  block all <dbname>             Block ALL connections (including superusers)"
+  echo "  block users <dbname>           Block non-superuser connections"
+  echo "  unblock all <dbname>           Unblock ALL connections"
+  echo "  unblock users <dbname>         Unblock non-superuser connections"
   echo "  list                           List databases"
   echo "  users                          List PostgreSQL users"
   echo "  createuser                     Create DB owner user (password from db_password)"
@@ -329,6 +333,32 @@ case "${command}" in
     echo "> Dropping user ${DB_OWNER}..."
     pg_admin dropuser -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${DB_OWNER}"
     echo "< Done!!"
+    ;;
+
+  block)
+    if [[ $# -ne 2 ]]; then
+      echo "Usage: ${script_name} block <all|users> <dbname>" >&2
+      exit 2
+    fi
+    require_pguser_password
+    case "${1}" in
+      all)   do_block_all_connections "${2}" ;;
+      users) do_block_user_connections "${2}" ;;
+      *)     echo "ERROR: Invalid target '${1}'. Expected 'all' or 'users'." >&2; exit 2 ;;
+    esac
+    ;;
+
+  unblock)
+    if [[ $# -ne 2 ]]; then
+      echo "Usage: ${script_name} unblock <all|users> <dbname>" >&2
+      exit 2
+    fi
+    require_pguser_password
+    case "${1}" in
+      all)   do_unblock_all_connections "${2}" ;;
+      users) do_unblock_user_connections "${2}" ;;
+      *)     echo "ERROR: Invalid target '${1}'. Expected 'all' or 'users'." >&2; exit 2 ;;
+    esac
     ;;
 
   *)

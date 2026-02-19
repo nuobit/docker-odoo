@@ -217,6 +217,12 @@ docker compose exec <container> db drop <database>
 # Reset (drop and recreate) a database:
 docker compose exec <container> db reset <database>
 
+# Block/unblock connections:
+docker compose exec <container> db block all <database>      # block everyone (including superusers)
+docker compose exec <container> db block users <database>    # block regular users only
+docker compose exec <container> db unblock all <database>    # unblock everyone
+docker compose exec <container> db unblock users <database>  # unblock regular users
+
 # List databases owned by DB_OWNER:
 docker compose exec <container> db list
 
