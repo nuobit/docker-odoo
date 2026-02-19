@@ -258,8 +258,9 @@ case "${command}" in
     # accessing the database during init (which would cause concurrency
     # errors and abort the initialization).
     require_pguser_password
-    do_block_connections users "${database_name}" 1
+    do_block_connections users "${database_name}"
     do_terminate_all_connections "${database_name}"
+    do_set_user_connection_limit "${database_name}" 1
     # Ensure connections are restored even if init fails (crash, signal, etc.)
     trap 'do_unblock_connections users "${database_name}"' EXIT
     echo "> Initializing Odoo in database ${database_name}..."
