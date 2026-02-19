@@ -328,7 +328,7 @@ case "${command}" in
       exit 2
     fi
     require_pguser_password
-    echo "> Creating user ${DB_OWNER}..."
+    echo "> Creating user '${DB_OWNER}' (db_user from ${ODOO_CONF}) with password from db_password..."
     pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" \
       -v "owner_name=${DB_OWNER}" \
       -v "owner_pwd=${DB_OWNER_PASSWORD}" <<-'EOSQL'
@@ -343,7 +343,7 @@ case "${command}" in
       exit 2
     fi
     require_pguser_password
-    echo "> Dropping user ${DB_OWNER}..."
+    echo "> Dropping user '${DB_OWNER}' (db_user from ${ODOO_CONF})..."
     pg_admin dropuser -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${DB_OWNER}"
     echo "< Done!!"
     ;;
