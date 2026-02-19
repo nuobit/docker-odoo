@@ -306,6 +306,7 @@ case "${command}" in
       echo "" >&2
       echo "Failed to list databases." >&2
       echo "ERROR: Connection failed. User '${DB_OWNER}' probably does not exist." >&2
+      echo "You need to have the DB Odoo user '${DB_OWNER}' created to get the list of databases." >&2
       echo "Try running: ${script_name} createuser" >&2
       exit 1
     fi
@@ -316,12 +317,8 @@ case "${command}" in
       echo "Usage: ${script_name} users" >&2
       exit 2
     fi
-    if ! pg_owner -c "\du"; then
-      echo "" >&2
-      echo "Failed to list users." >&2
-      echo "ERROR: Connection failed. User '${DB_OWNER}' probably does not exist." >&2
-      echo "Try running: ${script_name} createuser" >&2
-      exit 1
+    require_pguser_password
+    pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -c "\du"
     fi
     ;;
 
