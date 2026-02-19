@@ -98,9 +98,9 @@ do_set_datallowconn() {
   local value="${2}"
   echo "> Setting datallowconn = ${value} on ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -v "dbname=${dbname}" \
-    -c "UPDATE pg_database SET datallowconn = ${value} WHERE datname = :'dbname';" \
-    > /dev/null || true
+    -v "dbname=${dbname}" -v "value=${value}" <<-'EOSQL' > /dev/null || true
+		UPDATE pg_database SET datallowconn = :value WHERE datname = :'dbname';
+	EOSQL
   echo "< Done!!"
 }
 
@@ -113,9 +113,9 @@ do_set_user_connection_limit() {
   local limit="${2}"
   echo "> Setting user connection limit to ${limit} on ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -v "dbname=${dbname}" \
-    -c "ALTER DATABASE :\"dbname\" WITH CONNECTION LIMIT ${limit};" \
-    > /dev/null || true
+    -v "dbname=${dbname}" -v "limit=${limit}" <<-'EOSQL' > /dev/null || true
+		ALTER DATABASE :"dbname" WITH CONNECTION LIMIT :limit;
+	EOSQL
   echo "< Done!!"
 }
 
@@ -158,9 +158,9 @@ do_terminate_all_connections() {
   local dbname="${1}"
   echo "> Terminating all active connections to ${dbname}..."
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
-    -v "dbname=${dbname}" \
-    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();" \
-    > /dev/null || true
+    -v "dbname=${dbname}" <<-'EOSQL' > /dev/null || true
+		SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();
+	EOSQL
   echo "< Done!!"
 }
 
@@ -333,9 +333,10 @@ case "${command}" in
     require_pguser_password
     echo "> Creating user ${DB_OWNER}..."
     pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" \
-      -c "CREATE USER :\"owner_name\" WITH PASSWORD :'owner_pwd'" \
       -v "owner_name=${DB_OWNER}" \
-      -v "owner_pwd=${DB_OWNER_PASSWORD}"
+      -v "owner_pwd=${DB_OWNER_PASSWORD}" <<-'EOSQL'
+		CREATE USER :"owner_name" WITH PASSWORD :'owner_pwd';
+	EOSQL
     echo "< Done!!"
     ;;
 
