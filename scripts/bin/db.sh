@@ -86,10 +86,22 @@ do_create_db() {
   echo "< Done!!"
 }
 
+# Terminate all active connections to a database.
+# Usage: do_terminate_connections <dbname>
+do_terminate_connections() {
+  local dbname="${1}"
+  echo "> Terminating active connections to ${dbname}..."
+  pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${dbname}' AND pid <> pg_backend_pid();" \
+    > /dev/null 2>&1 || true
+  echo "< Done!!"
+}
+
 # Drop a database.
 # Usage: do_drop_db <dbname>
 do_drop_db() {
   local dbname="${1}"
+  do_terminate_connections "${dbname}"
   echo "> Dropping database ${dbname}..."
   pg_admin dropdb -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${dbname}" || {
     echo "Failed to drop database." >&2
