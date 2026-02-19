@@ -228,6 +228,12 @@ docker compose exec <container> db createuser
 docker compose exec <container> db dropuser
 ```
 
+#### Automatic connection termination on drop/reset
+
+The `drop` and `reset` commands automatically **terminate all active connections** to the target database before attempting to drop it. PostgreSQL refuses to drop a database that has active connections, so this step is essential for the operation to succeed.
+
+This means you do **not** need to manually stop Odoo or disconnect clients before running `drop` or `reset` — the script handles it for you.
+
 #### Configuration
 
 Connection settings are read from `odoo.conf` (`db_host`, `db_user`, `db_password`). Admin credentials come from `defaults.env` (or overridden in `settings.env`):
@@ -276,6 +282,13 @@ sudo chown -R 99910:99910 /srv/docker/stack/odoo10-1/config
 sudo chown -R 99910:99910 /srv/docker/data/odoo10-1
 ```
 
+**Important — config directory ownership:** The `config/` directory (and its contents) **must** be owned by UID `99910` on the host. During bootstrap, the `genaddonspath` script writes the generated `addons_path` directly into `odoo.conf`. If the container cannot write to this file, bootstrap will fail and Odoo will start without the correct addons path.
+
+```bash
+# Required: ensure the container can write to config files
+sudo chown -R 99910:99910 /srv/docker/stack/odoo10-1/config
+```
+
 ### 2. Customize configuration
 
 Edit the copied files for your instance:
@@ -301,7 +314,7 @@ deploy/                              /srv/docker/stack/odoo10-1/
 └── config/                    →     └── config/  (bind-mounted to /opt/odoo/config/)
     ├── odoo.conf                        ├── odoo.conf
     ├── repos.yaml                       ├── repos.yaml
-    └── settings.env                      └── settings.env
+    └── settings.env                     └── settings.env
 ```
 
 Runtime data is stored separately:

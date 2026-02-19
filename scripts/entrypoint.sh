@@ -1,6 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
+# On error, sleep indefinitely to prevent restart loops.
+# The container stays running so you can: docker exec -it <name> bash
+# Once fixed, restart with: docker restart <name>
+on_error() {
+  echo "FATAL: entrypoint failed (exit code $?). Container will stay alive for debugging." >&2
+  echo "  -> docker exec -it \$(hostname) bash" >&2
+  sleep infinity
+}
+trap on_error ERR
+
 # get common vars and functions
 source "${HOME}/scripts/lib/common.sh"
 
