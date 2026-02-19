@@ -38,6 +38,7 @@ usage() {
   echo "  block users <dbname>           Block non-superuser connections"
   echo "  unblock all <dbname>           Unblock ALL connections"
   echo "  unblock users <dbname>         Unblock non-superuser connections"
+  echo "  terminate <dbname>             Terminate all active connections"
   echo "  list                           List databases"
   echo "  users                          List PostgreSQL users"
   echo "  createuser                     Create DB owner user (password from db_password)"
@@ -366,6 +367,15 @@ case "${command}" in
     fi
     require_pguser_password
     do_unblock_connections "${1}" "${2}"
+    ;;
+
+  terminate)
+    if [[ $# -ne 1 ]]; then
+      echo "Usage: ${script_name} terminate <dbname>" >&2
+      exit 2
+    fi
+    require_pguser_password
+    do_terminate_all_connections "${1}"
     ;;
 
   *)
