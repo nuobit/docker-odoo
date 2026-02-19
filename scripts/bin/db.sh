@@ -319,7 +319,6 @@ case "${command}" in
     fi
     require_pguser_password
     pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -c "\du"
-    fi
     ;;
 
   createuser)
