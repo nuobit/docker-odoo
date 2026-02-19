@@ -112,7 +112,7 @@ def update_odoo_conf_addons_path(odoo_conf, addons_path):
 
 def main():
     # Load paths from configuration file
-    config = source_env("%s/config/defaults.env" % os.environ['HOME'])
+    config = source_env("%s/dist/defaults.env" % os.environ['HOME'])
 
     # REPOS
     src_dir = config['SRC_DIR']
