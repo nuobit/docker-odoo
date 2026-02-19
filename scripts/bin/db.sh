@@ -119,14 +119,16 @@ do_set_user_connection_limit() {
 
 # Block connections to a database.
 #   all   — blocks everyone, including superusers (datallowconn = false)
-#   users — blocks regular users only (CONNECTION LIMIT 0), superusers can still connect
-# Usage: do_block_connections <all|users> <dbname>
+#   users — blocks regular users only (CONNECTION LIMIT), superusers can still connect
+#           Optional limit: defaults to 0 (fully blocked), use N to allow N connections.
+# Usage: do_block_connections <all|users> <dbname> [limit]
 do_block_connections() {
   local target="${1}"
   local dbname="${2}"
+  local limit="${3:-0}"
   case "${target}" in
     all)   do_set_datallowconn "${dbname}" false ;;
-    users) do_set_user_connection_limit "${dbname}" 0 ;;
+    users) do_set_user_connection_limit "${dbname}" "${limit}" ;;
     *)     echo "ERROR: do_block_connections: invalid target '${target}'. Expected 'all' or 'users'." >&2; exit 2 ;;
   esac
 }
@@ -253,9 +255,8 @@ case "${command}" in
     # accessing the database during init (which would cause concurrency
     # errors and abort the initialization).
     require_pguser_password
-    do_block_connections users "${database_name}"
+    do_block_connections users "${database_name}" 1
     do_terminate_all_connections "${database_name}"
-    do_set_user_connection_limit "${database_name}" 1
     # Ensure connections are restored even if init fails (crash, signal, etc.)
     trap 'do_unblock_connections users "${database_name}"' EXIT
     echo "> Initializing Odoo in database ${database_name}..."

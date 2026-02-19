@@ -242,21 +242,28 @@ The `drop` and `reset` commands automatically handle active connections before d
 2. **Terminate existing connections** — kills all active backends connected to the database
 3. **Drop the database**
 
-This two-step approach eliminates the race condition where new connections could sneak in between termination and the actual drop. You do **not** need to manually stop Odoo or disconnect clients — the script handles it for you.
+This eliminates the race condition where new connections could sneak in between termination and the actual drop. You do **not** need to manually stop Odoo or disconnect clients — the script handles it for you.
 
-#### Connection control helpers
+#### Connection control
 
-The `db` script also provides lower-level connection control functions (used internally, but available for manual recovery or maintenance):
+The `block` and `unblock` subcommands control who can connect to a database:
 
-| Function | SQL effect | Who's blocked |
+| Command | SQL effect | Who's blocked |
 |---|---|---|
-| `do_block_connections all` | `datallowconn = false` | Everyone (including superusers) |
-| `do_block_connections users` | `CONNECTION LIMIT 0` | Regular users only (superusers can still connect) |
-| `do_unblock_connections all` | `datallowconn = true` | Nobody |
-| `do_unblock_connections users` | `CONNECTION LIMIT -1` | Nobody (unlimited) |
-| `do_terminate_all_connections` | `pg_terminate_backend()` | Kills all active backends on the database |
+| `db block all <dbname>` | `datallowconn = false` | Everyone (including superusers) |
+| `db block users <dbname>` | `CONNECTION LIMIT 0` | Regular users only (superusers can still connect) |
+| `db unblock all <dbname>` | `datallowconn = true` | Nobody |
+| `db unblock users <dbname>` | `CONNECTION LIMIT -1` | Nobody (unlimited) |
 
-Use `do_block_connections users` / `do_unblock_connections users` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use `all` for a complete lockout (e.g., before dropping a database).
+Use `block users` / `unblock users` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use `all` for a complete lockout (e.g., before dropping a database).
+
+Internally, these dispatch to two low-level helpers that can also be called directly in scripts:
+
+| Helper | Purpose |
+|---|---|
+| `do_set_datallowconn <dbname> <true\|false>` | Controls whether any connections are allowed |
+| `do_set_user_connection_limit <dbname> <limit>` | Sets non-superuser connection limit (-1 = unlimited, 0 = blocked, N = max N) |
+| `do_terminate_all_connections <dbname>` | Kills all active backends on the database |
 
 `do_terminate_all_connections` excludes its own psql session (`pg_backend_pid()`) to avoid self-termination — this matters when the target database name matches `DB_PGDB` (e.g., both are `postgres`).
 
