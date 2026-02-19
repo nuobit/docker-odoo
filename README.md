@@ -37,6 +37,7 @@ ghcr.io/<org>/odoo-10.0
 - Node.js: 6.x
 - wkhtmltopdf: 0.12.1.4 (static Debian package)
 - User: non-root (`odoo`, uid `99910`)
+- Healthcheck: HTTP check on `/web/database/selector` every 120s
 
 This image is **legacy by design** and intended for environments that must keep Odoo 10 running.
 
@@ -267,10 +268,6 @@ This repository is for **building the Docker image**, not for running containers
 # Create the instance directory and copy all deploy files
 cp -r deploy/* /srv/docker/stack/odoo10-1/
 
-# Rename the settings template
-mv /srv/docker/stack/odoo10-1/config/settings.env.example \
-   /srv/docker/stack/odoo10-1/config/settings.env
-
 # Create data directories
 mkdir -p /srv/docker/data/odoo10-1/{src,data}
 
@@ -304,7 +301,7 @@ deploy/                              /srv/docker/stack/odoo10-1/
 └── config/                    →     └── config/  (bind-mounted to /opt/odoo/config/)
     ├── odoo.conf                        ├── odoo.conf
     ├── repos.yaml                       ├── repos.yaml
-    └── settings.env.example             └── settings.env
+    └── settings.env                      └── settings.env
 ```
 
 Runtime data is stored separately:
@@ -334,6 +331,8 @@ services:
       - /srv/docker/stack/odoo10-1/config:/opt/odoo/config
       - /srv/docker/data/odoo10-1/src:/opt/odoo/src
       - /srv/docker/data/odoo10-1/data:/var/lib/odoo
+    restart: unless-stopped
+    mem_limit: 4g
     networks: [pg96-1-net]
 
 networks:
