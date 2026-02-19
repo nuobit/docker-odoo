@@ -217,11 +217,14 @@ docker compose exec <container> db drop <database>
 # Reset (drop and recreate) a database:
 docker compose exec <container> db reset <database>
 
-# Block/unblock connections:
+# Block/unblock connections (block also terminates existing connections):
 docker compose exec <container> db block all <database>      # block everyone (including superusers)
 docker compose exec <container> db block users <database>    # block regular users only
 docker compose exec <container> db unblock all <database>    # unblock everyone
 docker compose exec <container> db unblock users <database>  # unblock regular users
+
+# Terminate all active connections:
+docker compose exec <container> db terminate <database>
 
 # List databases owned by DB_OWNER:
 docker compose exec <container> db list
@@ -250,12 +253,15 @@ The `block` and `unblock` subcommands control who can connect to a database:
 
 | Command | SQL effect | Who's blocked |
 |---|---|---|
-| `db block all <dbname>` | `datallowconn = false` | Everyone (including superusers) |
-| `db block users <dbname>` | `CONNECTION LIMIT 0` | Regular users only (superusers can still connect) |
+| `db block all <dbname>` | `datallowconn = false` + terminate | Everyone (including superusers) |
+| `db block users <dbname>` | `CONNECTION LIMIT 0` + terminate | Regular users only (superusers can still connect) |
 | `db unblock all <dbname>` | `datallowconn = true` | Nobody |
 | `db unblock users <dbname>` | `CONNECTION LIMIT -1` | Nobody (unlimited) |
+| `db terminate <dbname>` | Terminates all active backends | N/A (kills existing connections only) |
 
-Use `block users` / `unblock users` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use `all` for a complete lockout (e.g., before dropping a database).
+Both `block` commands also **terminate all existing connections** after setting the limit, ensuring no stale sessions remain.
+
+Use `block users` / `unblock users` when you need to prevent regular users from connecting while keeping superuser access for maintenance. Use `all` for a complete lockout (e.g., before dropping a database). Use `terminate` when you just need to kill active connections without changing connection limits.
 
 Internally, these dispatch to two low-level helpers that can also be called directly in scripts:
 
