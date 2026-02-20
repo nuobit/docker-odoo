@@ -45,20 +45,20 @@ usage() {
   exit 2
 }
 
-# Ask the user to type a name as a safety confirmation.
-# Usage: confirm_destructive <name> <description> <prompt_label>
+# Warn the user about a destructive action and ask for y/N confirmation.
+# Skipped when force=true.
+# Usage: confirm_destructive <description> <force>
 confirm_destructive() {
-  local name="${1}"
-  local description="${2}"
-  local prompt_label="${3}"
-  if [[ "${FORCE}" == true ]]; then
+  local description="${1}"
+  local force="${2}"
+  if [[ "${force}" == true ]]; then
     return
   fi
   echo "WARNING: ${description}"
   echo "This action CANNOT be undone."
-  read -p "Type the ${prompt_label} to confirm: " confirm_input
-  if [[ "${confirm_input}" != "${name}" ]]; then
-    echo "Confirmation failed. Aborting." >&2
+  read -p "Continue? [y/N] " answer
+  if [[ "${answer}" != "y" && "${answer}" != "Y" ]]; then
+    echo "Aborted." >&2
     exit 1
   fi
 }
@@ -145,7 +145,7 @@ with open(sys.argv[8], 'w') as f:
 # Parse global flags
 # ---------------------------------------------------------------------------
 
-FORCE=false
+FORCE="${DB_FORCE,,}"
 JOBS="${SNAPSHOT_JOBS}"
 
 while [[ $# -gt 0 ]]; do
@@ -273,9 +273,9 @@ case "${command}" in
       fi
     fi
 
-    confirm_destructive "${dbname}" \
+    confirm_destructive \
       "You are about to drop and recreate database '${dbname}' from snapshot '${snap_name}'." \
-      "database name"
+      "${FORCE}"
 
     # Warn if snapshot has no filestore but target database does
     has_snap_filestore=false
@@ -387,9 +387,9 @@ PYEOF
     require_snapshot_dir
     require_snapshot "${snap_name}"
 
-    confirm_destructive "${snap_name}" \
+    confirm_destructive \
       "You are about to permanently delete snapshot '${snap_name}'." \
-      "snapshot name"
+      "${FORCE}"
 
     echo "> Removing snapshot ${snap_name}..."
     safe_remove_dir "${SNAPSHOT_DIR}/${snap_name}" "${FORCE}"
