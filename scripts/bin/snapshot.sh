@@ -213,7 +213,11 @@ case "${command}" in
     fi
 
     # Clean up partially created snapshot on failure
-    cleanup() { rm -rf "${snap_dir}"; }
+    cleanup() {
+      echo ""
+      echo "WARNING: Backup failed. Leftover files found at: ${snap_dir}"
+      safe_remove_dir "${snap_dir}" "${FORCE}"
+    }
     trap cleanup ERR
 
     mkdir -p "${snap_dir}/db"
@@ -388,7 +392,7 @@ PYEOF
       "snapshot name"
 
     echo "> Removing snapshot ${snap_name}..."
-    rm -rf "${SNAPSHOT_DIR}/${snap_name}"
+    safe_remove_dir "${SNAPSHOT_DIR}/${snap_name}" "${FORCE}"
     echo "< Done!!"
     ;;
 
