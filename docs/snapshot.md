@@ -1,17 +1,17 @@
 # Snapshot command
 
-The `snapshot` command provides named backup/restore of a complete Odoo environment state: database (schema + data) and filestore (attachments, images, reports). It is designed for development workflows like "save state before testing something destructive" and for creating portable copies of an environment.
+The `snapshot` command provides named create/restore of a complete Odoo environment state: database (schema + data) and filestore (attachments, images, reports). It is designed for development workflows like "save state before testing something destructive" and for creating portable copies of an environment.
 
 This is a separate command from `db` because a snapshot includes more than just the database — it also captures the filestore.
 
-**Note:** The existing `db import` command (SQL-only, stdin-based) remains unchanged and serves a different purpose — importing external SQL dumps from production servers or third parties. `snapshot` is for local named backup/restore workflows with full environment state (DB + filestore).
+**Note:** The existing `db import` command (SQL-only, stdin-based) remains unchanged and serves a different purpose — importing external SQL dumps from production servers or third parties. `snapshot` is for local named create/restore workflows with full environment state (DB + filestore).
 
 ---
 
 ## Commands
 
 ```
-snapshot backup  [-n "note"] [--no-filestore] <dbname> <snapshot-name>
+snapshot create  [-n "note"] [--no-filestore] <dbname> <snapshot-name>
 snapshot restore [-f] <snapshot-name> [dbname]
 snapshot list
 snapshot remove  [-f] <snapshot-name>
@@ -19,7 +19,7 @@ snapshot remove  [-f] <snapshot-name>
 
 | Command | Description |
 |---|---|
-| `backup` | Backup DB + filestore into a named snapshot |
+| `create` | Create a snapshot of DB + filestore |
 | `restore` | Restore a named snapshot into a database |
 | `list` | List available snapshots |
 | `remove` | Delete a snapshot |
@@ -28,10 +28,10 @@ snapshot remove  [-f] <snapshot-name>
 
 Follows the Unix `cp`/`rsync` convention: **source first, destination second**.
 
-- `backup <dbname> <snapshot-name>` — reading FROM the database, writing TO the snapshot
+- `create <dbname> <snapshot-name>` — reading FROM the database, writing TO the snapshot
 - `restore <snapshot-name> [dbname]` — reading FROM the snapshot, writing TO the database
 
-On `restore`, `dbname` is optional — if omitted, it defaults to the `source_db` recorded in `metadata.json` (i.e., the database name used at backup time). This covers the most common use case of restoring to the same database without redundant typing, while still allowing restore to a different database name when needed.
+On `restore`, `dbname` is optional — if omitted, it defaults to the `source_db` recorded in `metadata.json` (i.e., the database name used at creation time). This covers the most common use case of restoring to the same database without redundant typing, while still allowing restore to a different database name when needed.
 
 ### Global flags
 
@@ -42,12 +42,12 @@ On `restore`, `dbname` is optional — if omitted, it defaults to the `source_db
 
 ### Command-specific flags
 
-**`backup`:**
+**`create`:**
 
 | Short | Long | Description |
 |---|---|---|
 | `-n` | `--note` | Optional description stored in metadata (e.g., `-n "before upgrading account module"`) |
-| | `--no-filestore` | Skip filestore backup (database only) |
+| | `--no-filestore` | Skip filestore (database only) |
 
 ---
 
@@ -74,7 +74,7 @@ The `filestore/` directory is **not created** when `--no-filestore` is used. Its
 
 ### Why directory format (`pg_dump -Fd`)
 
-- **Incremental backup friendly**: tools like Borg or restic can deduplicate individual data files
+- **Incremental-friendly**: tools like Borg or restic can deduplicate individual data files
 - **Parallel dump/restore**: `pg_dump -j N` and `pg_restore -j N` use multiple workers
 - **No single large file**: avoids creating multi-GB monolithic dumps
 
@@ -95,13 +95,13 @@ Each snapshot includes a `metadata.json` with:
 }
 ```
 
-- `source_db` — the database name at backup time (informational only; restore target is independent and can be any database name)
+- `source_db` — the database name at creation time (informational only; restore target is independent and can be any database name)
 - `timestamp` — when the snapshot was taken (independent of filesystem dates, which `rsync`/`cp` can alter)
 - `odoo_version` — safety reference; helps identify compatibility when restoring
 - `pg_version` — PostgreSQL server version; helps detect potential compatibility issues on restore
 - `note` — optional user-provided description (omitted if `-n`/`--note` not used)
-- `size_db` — database dump size (computed via `du -sh` on `db/` directory at backup time)
-- `size_filestore` — filestore size (computed via `du -sh` on `filestore/` directory at backup time; omitted if `--no-filestore`)
+- `size_db` — database dump size (computed via `du -sh` on `db/` directory at creation time)
+- `size_filestore` — filestore size (computed via `du -sh` on `filestore/` directory at creation time; omitted if `--no-filestore`)
 - `size_total` — total snapshot size (computed via `du -sh` on the snapshot root). Since snapshots are immutable, sizes never become stale
 
 Used by `snapshot list` to display information instantly without inspecting dump contents or walking the directory tree.
@@ -110,7 +110,7 @@ Used by `snapshot list` to display information instantly without inspecting dump
 
 ## Command details
 
-### `snapshot backup [-n "note"] [--no-filestore] <dbname> <snapshot-name>`
+### `snapshot create [-n "note"] [--no-filestore] <dbname> <snapshot-name>`
 
 Creates a named snapshot from a live database and its filestore.
 
@@ -135,7 +135,7 @@ Creates a named snapshot from a live database and its filestore.
 - No connection blocking — `pg_dump` takes a consistent snapshot of a live database
 - Uses `--no-owner --no-acl` so the dump is portable across different DB users/names
 - Uses `PGPASSWORD` with `DB_OWNER` credentials (read from `odoo.conf`)
-- If the source filestore directory is missing (and `--no-filestore` was not used), shows a WARNING and proceeds with database-only backup
+- If the source filestore directory is missing (and `--no-filestore` was not used), shows a WARNING and proceeds with database-only snapshot
 
 ### `snapshot restore [-f|--force] <snapshot-name> [dbname]`
 
@@ -202,7 +202,7 @@ Snapshots created with `--no-filestore` show `-` in the FILESTORE column. Notes 
 **Steps:**
 
 1. Iterate directories in `$SNAPSHOT_DIR`
-2. Read `metadata.json` from each (sizes are pre-computed at backup time)
+2. Read `metadata.json` from each (sizes are pre-computed at creation time)
 3. Display formatted table sorted by date (newest first)
 
 ### `snapshot remove [-f|--force] <snapshot-name>`
@@ -301,8 +301,8 @@ The Dockerfile strips `.sh` extensions and adds `scripts/bin/` to PATH, so `snap
 
 | Command | Condition | Behavior |
 |---|---|---|
-| `backup` | Snapshot already exists | `ERROR: Snapshot '<name>' already exists. Remove it first or choose a different name.` |
-| `backup` | Filestore directory missing (without `--no-filestore`) | `WARNING: No filestore found for '<dbname>'. Backing up database only.` |
+| `create` | Snapshot already exists | `ERROR: Snapshot '<name>' already exists. Remove it first or choose a different name.` |
+| `create` | Filestore directory missing (without `--no-filestore`) | `WARNING: No filestore found for '<dbname>'. Creating database-only snapshot.` |
 | `restore` | Snapshot does not exist | `ERROR: Snapshot '<name>' not found in $SNAPSHOT_DIR.` |
 | `restore` | Destructive confirmation | Same `confirm_destructive` as `db drop` — type database name to confirm |
 | `restore` | No filestore in snapshot but existing filestore on target | `WARNING` + interactive confirmation (proceed leaves existing filestore untouched) |
@@ -316,13 +316,13 @@ The Dockerfile strips `.sh` extensions and adds `scripts/bin/` to PATH, so `snap
 
 ```bash
 # Save current state before a risky operation
-docker compose exec odoo snapshot backup mydb before-migration
+docker compose exec odoo snapshot create mydb before-migration
 
 # Save with a note
-docker compose exec odoo snapshot backup -n "before upgrading account module" mydb before-migration
+docker compose exec odoo snapshot create -n "before upgrading account module" mydb before-migration
 
 # Save database only (skip filestore)
-docker compose exec odoo snapshot backup --no-filestore mydb quick-save
+docker compose exec odoo snapshot create --no-filestore mydb quick-save
 
 # List available snapshots
 docker compose exec odoo snapshot list

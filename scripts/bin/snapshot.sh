@@ -28,8 +28,8 @@ usage() {
   echo "Usage: ${script_name} [-f|--force] [-j|--jobs N] <command> [args...]"
   echo ""
   echo "Commands:"
-  echo "  backup [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>"
-  echo "                             Backup database and filestore into a named snapshot"
+  echo "  create [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>"
+  echo "                             Create a snapshot of database and filestore"
   echo "  restore <snapshot-name> [dbname]"
   echo "                             Restore a named snapshot (default: original database)"
   echo "  list                       List available snapshots"
@@ -176,7 +176,7 @@ shift
 # ---------------------------------------------------------------------------
 
 case "${command}" in
-  backup)
+  create)
     # Parse command-specific flags
     note=""
     no_filestore=false
@@ -197,7 +197,7 @@ case "${command}" in
     done
 
     if [[ $# -ne 2 ]]; then
-      echo "Usage: ${script_name} backup [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>" >&2
+      echo "Usage: ${script_name} create [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>" >&2
       exit 2
     fi
 
@@ -215,7 +215,7 @@ case "${command}" in
     # Clean up partially created snapshot on failure
     cleanup() {
       echo ""
-      echo "WARNING: Backup failed. Leftover files found at: ${snap_dir}"
+      echo "WARNING: Snapshot creation failed. Leftover files found at: ${snap_dir}"
       safe_remove_dir "${snap_dir}" "${CONFIRM_LEVEL}"
     }
     trap cleanup ERR

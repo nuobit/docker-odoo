@@ -146,7 +146,7 @@ This ensures:
 | `/opt/odoo/scripts/bin/fetchcode` | `scripts/bin/fetchcode.sh` | Fetch git repositories script |
 | `/opt/odoo/scripts/bin/genaddonspath` | `scripts/bin/genaddonspath.py` | Generate addons_path from repos.yaml |
 | `/opt/odoo/scripts/bin/db` | `scripts/bin/db.sh` | Database management script |
-| `/opt/odoo/scripts/bin/snapshot` | `scripts/bin/snapshot.sh` | Snapshot backup/restore script |
+| `/opt/odoo/scripts/bin/snapshot` | `scripts/bin/snapshot.sh` | Snapshot create/restore script |
 | `/opt/odoo/dist/defaults.env` | `config/defaults.env` | Image default configuration |
 | `/opt/odoo/dist/constraints.txt` | `config/constraints.txt` | Python package version constraints |
 | `/opt/odoo/scripts/assets/pfbfer.zip` | `scripts/assets/pfbfer.zip` | ReportLab Type1 fonts archive |
@@ -195,7 +195,7 @@ These scripts can be executed inside the running container:
 | Script | Description | Usage |
 |--------|------------|-------|
 | `db` | Database management | `docker compose exec <container> db <command> [args...]` |
-| `snapshot` | Snapshot backup/restore | `docker compose exec <container> snapshot <command> [args...]` |
+| `snapshot` | Snapshot create/restore | `docker compose exec <container> snapshot <command> [args...]` |
 | `updatemodules` | Update modules | `docker compose exec <container> updatemodules <database> <all\|module_list\|changed>` |
 | `shell` | Interactive Odoo shell | `docker compose exec <container> shell <database>` |
 | `fetchbasereqs` | Fetch base requirements | `docker compose exec <container> fetchbasereqs` |
@@ -338,19 +338,19 @@ docker compose exec -T <container> shell <database> < myscript.py
 
 ### Snapshot management with `snapshot`
 
-The `snapshot` script provides named backup and restore of a complete Odoo environment state: database (schema + data) and filestore (attachments, images, reports). It is designed for development workflows like "save state before testing something destructive" and for creating portable copies of an environment.
+The `snapshot` script provides named create and restore of a complete Odoo environment state: database (schema + data) and filestore (attachments, images, reports). It is designed for development workflows like "save state before testing something destructive" and for creating portable copies of an environment.
 
-**Note:** The existing `db import` command (SQL-only, stdin-based) remains unchanged and serves a different purpose — importing external SQL dumps. `snapshot` is for local named backup/restore workflows with full environment state (DB + filestore).
+**Note:** The existing `db import` command (SQL-only, stdin-based) remains unchanged and serves a different purpose — importing external SQL dumps. `snapshot` is for local named create/restore workflows with full environment state (DB + filestore).
 
 ```bash
 # Save current state before a risky operation
-docker compose exec <container> snapshot backup mydb before-migration
+docker compose exec <container> snapshot create mydb before-migration
 
 # Save with a note
-docker compose exec <container> snapshot backup -n "before upgrading account module" mydb before-migration
+docker compose exec <container> snapshot create -n "before upgrading account module" mydb before-migration
 
 # Save database only (skip filestore)
-docker compose exec <container> snapshot backup --no-filestore mydb quick-save
+docker compose exec <container> snapshot create --no-filestore mydb quick-save
 
 # List available snapshots
 docker compose exec <container> snapshot list
@@ -373,7 +373,7 @@ docker compose exec <container> snapshot -f remove old-snapshot
 
 | Command | Description |
 |---|---|
-| `backup [-n "note"] [--no-filestore] <dbname> <snapshot-name>` | Backup DB + filestore into a named snapshot |
+| `create [-n "note"] [--no-filestore] <dbname> <snapshot-name>` | Create a snapshot of DB + filestore |
 | `restore <snapshot-name> [dbname]` | Restore a named snapshot into a database |
 | `list` | List available snapshots with metadata |
 | `remove <snapshot-name>` | Delete a snapshot |
@@ -467,7 +467,7 @@ Runtime data is stored separately:
 /srv/docker/data/odoo10-1/
 ├── src/         # Source code (git-aggregated)
 ├── data/        # Odoo filestore, sessions, etc.
-└── snapshots/   # Named backups (database + filestore)
+└── snapshots/   # Named snapshots (database + filestore)
 ```
 
 - `/srv/docker/stack/<container>/` — **Configuration** (version-controlled, backed up separately)
