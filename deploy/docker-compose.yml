@@ -9,6 +9,7 @@ services:
       - /srv/docker/stack/odoo10-1/config:/opt/odoo/config
       - /srv/docker/data/odoo10-1/src:/opt/odoo/src
       - /srv/docker/data/odoo10-1/data:/var/lib/odoo
+      - /srv/docker/data/odoo10-1/snapshots:/opt/odoo/snapshots
     restart: unless-stopped
     mem_limit: 4g
     networks: [pg96-1-net]

@@ -146,6 +146,7 @@ This ensures:
 | `/opt/odoo/scripts/bin/fetchcode` | `scripts/bin/fetchcode.sh` | Fetch git repositories script |
 | `/opt/odoo/scripts/bin/genaddonspath` | `scripts/bin/genaddonspath.py` | Generate addons_path from repos.yaml |
 | `/opt/odoo/scripts/bin/db` | `scripts/bin/db.sh` | Database management script |
+| `/opt/odoo/scripts/bin/snapshot` | `scripts/bin/snapshot.sh` | Snapshot backup/restore script |
 | `/opt/odoo/dist/defaults.env` | `config/defaults.env` | Image default configuration |
 | `/opt/odoo/dist/constraints.txt` | `config/constraints.txt` | Python package version constraints |
 | `/opt/odoo/scripts/assets/pfbfer.zip` | `scripts/assets/pfbfer.zip` | ReportLab Type1 fonts archive |
@@ -154,6 +155,7 @@ This ensures:
 
 | Path | Purpose |
 |------|---------|
+| `/opt/odoo/snapshots/` | Snapshot storage directory (bind-mounted) |
 | `/opt/odoo/config/` | Instance configuration directory (bind-mounted) |
 | `/opt/odoo/config/odoo.conf` | Odoo configuration file — at minimum set `db_host`, `db_user`, `db_password` and `admin_passwd` |
 | `/opt/odoo/config/repos.yaml` | Git-aggregator config — contains all OCA repos with a `10.0` branch and actual Odoo modules (see [Localization repos](#localization-repos-l10n)) |
@@ -193,6 +195,7 @@ These scripts can be executed inside the running container:
 | Script | Description | Usage |
 |--------|------------|-------|
 | `db` | Database management | `docker compose exec <container> db <command> [args...]` |
+| `snapshot` | Snapshot backup/restore | `docker compose exec <container> snapshot <command> [args...]` |
 | `updatemodules` | Update modules | `docker compose exec <container> updatemodules <database> <all\|module_list\|changed>` |
 | `shell` | Interactive Odoo shell | `docker compose exec <container> shell <database>` |
 | `fetchbasereqs` | Fetch base requirements | `docker compose exec <container> fetchbasereqs` |
@@ -333,6 +336,76 @@ When piping a script to `shell`, use the `-T` flag:
 docker compose exec -T <container> shell <database> < myscript.py
 ```
 
+### Snapshot management with `snapshot`
+
+The `snapshot` script provides named backup and restore of a complete Odoo environment state: database (schema + data) and filestore (attachments, images, reports). It is designed for development workflows like "save state before testing something destructive" and for creating portable copies of an environment.
+
+**Note:** The existing `db import` command (SQL-only, stdin-based) remains unchanged and serves a different purpose — importing external SQL dumps. `snapshot` is for local named backup/restore workflows with full environment state (DB + filestore).
+
+```bash
+# Save current state before a risky operation
+docker compose exec <container> snapshot backup mydb before-migration
+
+# Save with a note
+docker compose exec <container> snapshot backup -n "before upgrading account module" mydb before-migration
+
+# Save database only (skip filestore)
+docker compose exec <container> snapshot backup --no-filestore mydb quick-save
+
+# List available snapshots
+docker compose exec <container> snapshot list
+
+# Restore to the original database (dbname from metadata)
+docker compose exec <container> snapshot restore before-migration
+
+# Restore to a different database name
+docker compose exec <container> snapshot restore before-migration mydb-test
+
+# Delete a snapshot
+docker compose exec <container> snapshot remove before-migration
+
+# Skip confirmation prompts
+docker compose exec <container> snapshot -f restore before-migration mydb
+docker compose exec <container> snapshot -f remove old-snapshot
+```
+
+#### Commands
+
+| Command | Description |
+|---|---|
+| `backup [-n "note"] [--no-filestore] <dbname> <snapshot-name>` | Backup DB + filestore into a named snapshot |
+| `restore <snapshot-name> [dbname]` | Restore a named snapshot into a database |
+| `list` | List available snapshots with metadata |
+| `remove <snapshot-name>` | Delete a snapshot |
+
+Argument order follows the Unix `cp`/`rsync` convention: **source first, destination second**. On `restore`, `dbname` is optional — if omitted, it defaults to the database name recorded at backup time.
+
+#### Options
+
+| Short | Long | Description |
+|---|---|---|
+| `-f` | `--force` | Skip confirmation prompts on destructive operations (`restore`, `remove`) |
+| `-j` | `--jobs` | Number of parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS`) |
+| `-n` | `--note` | Optional description stored in metadata (`backup` only) |
+| | `--no-filestore` | Skip filestore backup — database only (`backup` only) |
+
+#### Storage
+
+Snapshots are stored in a dedicated bind-mounted directory (default: `/opt/odoo/snapshots`). Each snapshot is a directory containing a `metadata.json`, a `db/` subdirectory (PostgreSQL directory-format dump), and optionally a `filestore/` subdirectory.
+
+The snapshot directory is a **sibling** of `data/` on the host, allowing each to live on a different volume, disk, or partition — e.g., `data/` on a fast SSD, `snapshots/` on a larger HDD.
+
+#### Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `SNAPSHOT_DIR` | `/opt/odoo/snapshots` | Snapshot storage directory (bind-mounted) |
+| `SNAPSHOT_JOBS` | `2` | Parallel workers for `pg_dump`/`pg_restore` |
+
+Both can be overridden in `settings.env`.
+
+For design rationale and directory format details, see [docs/snapshot.md](docs/snapshot.md).
+
 ---
 
 ## Deploying an instance
@@ -346,7 +419,7 @@ This repository is for **building the Docker image**, not for running containers
 cp -r deploy/* /srv/docker/stack/odoo10-1/
 
 # Create data directories
-mkdir -p /srv/docker/data/odoo10-1/{src,data}
+mkdir -p /srv/docker/data/odoo10-1/{src,data,snapshots}
 
 # Set ownership
 sudo chown -R 99910:99910 /srv/docker/stack/odoo10-1/config
@@ -393,7 +466,8 @@ Runtime data is stored separately:
 ```
 /srv/docker/data/odoo10-1/
 ├── src/         # Source code (git-aggregated)
-└── data/        # Odoo filestore, sessions, etc.
+├── data/        # Odoo filestore, sessions, etc.
+└── snapshots/   # Named backups (database + filestore)
 ```
 
 - `/srv/docker/stack/<container>/` — **Configuration** (version-controlled, backed up separately)
@@ -415,6 +489,7 @@ services:
       - /srv/docker/stack/odoo10-1/config:/opt/odoo/config
       - /srv/docker/data/odoo10-1/src:/opt/odoo/src
       - /srv/docker/data/odoo10-1/data:/var/lib/odoo
+      - /srv/docker/data/odoo10-1/snapshots:/opt/odoo/snapshots
     restart: unless-stopped
     mem_limit: 4g
     networks: [pg96-1-net]
@@ -449,6 +524,8 @@ Baked into the image at `/opt/odoo/dist/defaults.env` (from `config/defaults.env
 | `DB_PGUSER` | `postgres` | PostgreSQL admin user |
 | `DB_PGDB` | `postgres` | PostgreSQL maintenance database |
 | `DB_FORCE` | `false` | Skip name confirmation on drop/reset |
+| `SNAPSHOT_DIR` | `/opt/odoo/snapshots` | Snapshot storage directory (bind-mounted) |
+| `SNAPSHOT_JOBS` | `2` | Parallel workers for `pg_dump`/`pg_restore` |
 
 ### Instance overrides (`settings.env`)
 
