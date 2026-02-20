@@ -388,7 +388,7 @@ PYEOF
       "snapshot name"
 
     echo "> Removing snapshot ${snap_name}..."
-    rm -rf "${SNAPSHOT_DIR}/${snap_name}/"
+    rm -rf "${SNAPSHOT_DIR}/${snap_name}"
     echo "< Done!!"
     ;;
 
