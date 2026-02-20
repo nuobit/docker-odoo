@@ -145,7 +145,7 @@ with open(sys.argv[8], 'w') as f:
 # Parse global flags
 # ---------------------------------------------------------------------------
 
-FORCE="${DB_FORCE,,}"
+FORCE="${SKIP_CONFIRM,,}"
 JOBS="${SNAPSHOT_JOBS}"
 
 while [[ $# -gt 0 ]]; do

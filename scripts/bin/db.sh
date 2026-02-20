@@ -54,7 +54,7 @@ usage() {
   echo "    DB_PGUSER             PostgreSQL admin user (default: postgres)"
   echo "    DB_PGDB               PostgreSQL maintenance database (default: postgres)"
   echo "    DB_PGUSER_PASSWORD    PostgreSQL admin password (prompted if unset)"
-  echo "    DB_FORCE              Skip database name confirmation on drop/reset"
+  echo "    SKIP_CONFIRM          Skip confirmation prompts on destructive operations"
   exit 2
 }
 
@@ -207,7 +207,7 @@ pg_owner() {
 # Parse flags
 # ---------------------------------------------------------------------------
 
-FORCE="${DB_FORCE,,}"
+FORCE="${SKIP_CONFIRM,,}"
 while [[ $# -gt 0 ]]; do
   case "${1}" in
     -f|--force)
