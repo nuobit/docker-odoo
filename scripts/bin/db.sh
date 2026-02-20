@@ -61,7 +61,7 @@ usage() {
 # Ensure DB_PGUSER_PASSWORD is set, prompting interactively if needed.
 require_pguser_password() {
   if [[ -z "${DB_PGUSER_PASSWORD:-}" ]]; then
-    read -sp "Password for user ${DB_PGUSER}: " DB_PGUSER_PASSWORD
+    read -rsp "Password for user ${DB_PGUSER}: " DB_PGUSER_PASSWORD
     echo ""
   fi
 }
@@ -192,7 +192,7 @@ confirm_destructive() {
   fi
   echo "WARNING: ${description}"
   echo "This action CANNOT be undone."
-  read -p "Type the database name to confirm: " confirm_name
+  read -rp "Type the database name to confirm: " confirm_name
   if [[ "${confirm_name}" != "${dbname}" ]]; then
     echo "Confirmation failed. Database name does not match. Aborting." >&2
     exit 1

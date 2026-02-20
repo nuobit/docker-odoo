@@ -56,7 +56,7 @@ confirm_destructive() {
   fi
   echo "WARNING: ${description}"
   echo "This action CANNOT be undone."
-  read -p "Continue? [y/N] " answer
+  read -rp "Continue? [y/N] " answer
   if [[ "${answer}" != "y" && "${answer}" != "Y" ]]; then
     echo "Aborted." >&2
     exit 1
@@ -288,7 +288,7 @@ case "${command}" in
       if [[ "${CONFIRM_LEVEL}" == "all" ]]; then
         echo "WARNING: Snapshot '${snap_name}' has no filestore, but '${dbname}' has an existing filestore."
         echo "The existing filestore will NOT be modified."
-        read -p "Continue? [y/N] " answer
+        read -rp "Continue? [y/N] " answer
         if [[ "${answer}" != "y" && "${answer}" != "Y" ]]; then
           echo "Aborted." >&2
           exit 1

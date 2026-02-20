@@ -4,6 +4,7 @@ set -euo pipefail
 # Source configuration (required)
 CONFIG_FILE="${HOME}/dist/defaults.env"
 if [[ -f "${CONFIG_FILE}" ]]; then
+  # shellcheck disable=SC1090  # path is dynamic but always resolves to defaults.env
   source "${CONFIG_FILE}"
 else
   echo "ERROR: Configuration file not found: ${CONFIG_FILE}" >&2
@@ -48,7 +49,7 @@ safe_remove_dir() {
   [[ "${target}" != "${HOME}" ]]    || { echo "ERROR: safe_remove_dir: refusing to remove HOME directory." >&2; exit 1; }
   if [[ "${level}" != "none" ]]; then
     echo "About to remove: '${target}'"
-    read -p "Type '${dir_name}' to confirm: " confirm_input
+    read -rp "Type '${dir_name}' to confirm: " confirm_input
     if [[ "${confirm_input}" != "${dir_name}" ]]; then
       echo "Confirmation failed. Aborting." >&2
       exit 1
