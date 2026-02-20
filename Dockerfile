@@ -14,7 +14,7 @@ RUN sed -i 's|deb.debian.org/debian|archive.debian.org/debian|g' /etc/apt/source
 #RUN printf 'Acquire::Check-Valid-Until "false";\nAcquire::AllowInsecureRepositories "true";\n' > /etc/apt/apt.conf.d/99no-check-valid-until
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    apt-transport-https vim ca-certificates curl git unzip \
+    apt-transport-https vim ca-certificates curl git unzip rsync \
     gcc build-essential \
     python2.7 python-pip python-setuptools \
     python-dev \
