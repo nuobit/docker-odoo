@@ -25,7 +25,7 @@ DB_OWNER_PASSWORD=$(odoo_conf_get db_password)
 # ---------------------------------------------------------------------------
 
 usage() {
-  echo "Usage: ${script_name} [-f|--force] [-v|--verbose] [-j|--jobs N] <command> [args...]"
+  echo "Usage: ${script_name} <command> [options] [args...]"
   echo ""
   echo "Commands:"
   echo "  create [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>"
@@ -145,12 +145,21 @@ with open(sys.argv[8], 'w') as f:
 }
 
 # ---------------------------------------------------------------------------
-# Parse global flags
+# Parse command and flags
 # ---------------------------------------------------------------------------
+
+if [[ $# -lt 1 ]]; then
+  usage
+fi
+
+command="${1}"
+shift
 
 CONFIRM_LEVEL="${CONFIRM_LEVEL,,}"
 JOBS="${SNAPSHOT_JOBS}"
 VERBOSE=""
+note=""
+no_filestore=false
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
@@ -166,18 +175,19 @@ while [[ $# -gt 0 ]]; do
       JOBS="${2}"
       shift 2
       ;;
+    -n|--note)
+      note="${2}"
+      shift 2
+      ;;
+    --no-filestore)
+      no_filestore=true
+      shift
+      ;;
     *)
       break
       ;;
   esac
 done
-
-if [[ $# -lt 1 ]]; then
-  usage
-fi
-
-command="${1}"
-shift
 
 # ---------------------------------------------------------------------------
 # Commands
@@ -185,27 +195,9 @@ shift
 
 case "${command}" in
   create)
-    # Parse command-specific flags
-    note=""
-    no_filestore=false
-    while [[ $# -gt 0 ]]; do
-      case "${1}" in
-        -n|--note)
-          note="${2}"
-          shift 2
-          ;;
-        --no-filestore)
-          no_filestore=true
-          shift
-          ;;
-        *)
-          break
-          ;;
-      esac
-    done
 
     if [[ $# -ne 2 ]]; then
-      echo "Usage: ${script_name} create [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>" >&2
+      echo "Usage: ${script_name} create [options] <dbname> <snapshot-name>" >&2
       exit 2
     fi
 
@@ -261,7 +253,7 @@ case "${command}" in
 
   restore)
     if [[ $# -lt 1 || $# -gt 2 ]]; then
-      echo "Usage: ${script_name} restore [-f] <snapshot-name> [dbname]" >&2
+      echo "Usage: ${script_name} restore [options] <snapshot-name> [dbname]" >&2
       exit 2
     fi
 
@@ -387,7 +379,7 @@ PYEOF
 
   remove)
     if [[ $# -ne 1 ]]; then
-      echo "Usage: ${script_name} remove [-f] <snapshot-name>" >&2
+      echo "Usage: ${script_name} remove [options] <snapshot-name>" >&2
       exit 2
     fi
 

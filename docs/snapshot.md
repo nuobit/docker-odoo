@@ -11,10 +11,10 @@ This is a separate command from `db` because a snapshot includes more than just 
 ## Commands
 
 ```
-snapshot [-f] [-v] [-j N] create  [-n "note"] [--no-filestore] <dbname> <snapshot-name>
-snapshot [-f] [-v] [-j N] restore <snapshot-name> [dbname]
+snapshot create  [options] <dbname> <snapshot-name>
+snapshot restore [options] <snapshot-name> [dbname]
 snapshot list
-snapshot [-f] remove <snapshot-name>
+snapshot remove  [options] <snapshot-name>
 ```
 
 | Command | Description |
@@ -33,22 +33,17 @@ Follows the Unix `cp`/`rsync` convention: **source first, destination second**.
 
 On `restore`, `dbname` is optional — if omitted, it defaults to the `source_db` recorded in `metadata.json` (i.e., the database name used at creation time). This covers the most common use case of restoring to the same database without redundant typing, while still allowing restore to a different database name when needed.
 
-### Global flags
+### Options
 
-| Short | Long | Description |
-|---|---|---|
-| `-f` | `--force` | Skip confirmation prompts on destructive operations (`restore`, `remove`) |
-| `-v` | `--verbose` | Show detailed output from `pg_dump`, `pg_restore`, and `rsync` (default: errors only) |
-| `-j` | `--jobs` | Number of parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS` default) |
+All options go after the subcommand, before positional arguments.
 
-### Command-specific flags
-
-**`create`:**
-
-| Short | Long | Description |
-|---|---|---|
-| `-n` | `--note` | Optional description stored in metadata (e.g., `-n "before upgrading account module"`) |
-| | `--no-filestore` | Skip filestore (database only) |
+| Short | Long | Description | Applies to |
+|---|---|---|---|
+| `-f` | `--force` | Skip confirmation prompts (sets `CONFIRM_LEVEL=none`) | `restore`, `remove` |
+| `-v` | `--verbose` | Show detailed output from `pg_dump`, `pg_restore`, and `rsync` (default: errors only) | `create`, `restore` |
+| `-j` | `--jobs` | Parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS`) | `create`, `restore` |
+| `-n` | `--note` | Optional description stored in metadata | `create` |
+| | `--no-filestore` | Skip filestore (database only) | `create` |
 
 ---
 
@@ -111,7 +106,7 @@ Used by `snapshot list` to display information instantly without inspecting dump
 
 ## Command details
 
-### `snapshot create [-n "note"] [--no-filestore] <dbname> <snapshot-name>`
+### `snapshot create [options] <dbname> <snapshot-name>`
 
 Creates a named snapshot from a live database and its filestore.
 
@@ -138,7 +133,7 @@ Creates a named snapshot from a live database and its filestore.
 - Uses `PGPASSWORD` with `DB_OWNER` credentials (read from `odoo.conf`)
 - If the source filestore directory is missing (and `--no-filestore` was not used), shows a WARNING and proceeds with database-only snapshot
 
-### `snapshot restore [-f|--force] <snapshot-name> [dbname]`
+### `snapshot restore [options] <snapshot-name> [dbname]`
 
 Restores a named snapshot into a database, replacing it completely.
 
@@ -206,7 +201,7 @@ Snapshots created with `--no-filestore` show `-` in the FILESTORE column. Notes 
 2. Read `metadata.json` from each (sizes are pre-computed at creation time)
 3. Display formatted table sorted by date (newest first)
 
-### `snapshot remove [-f|--force] <snapshot-name>`
+### `snapshot remove [options] <snapshot-name>`
 
 Deletes a snapshot.
 
@@ -338,10 +333,10 @@ docker compose exec odoo snapshot restore before-migration mydb-test
 docker compose exec odoo snapshot remove before-migration
 
 # Skip confirmation prompts
-docker compose exec odoo snapshot -f restore before-migration mydb
-docker compose exec odoo snapshot -f remove old-snapshot
+docker compose exec odoo snapshot restore -f before-migration mydb
+docker compose exec odoo snapshot remove -f old-snapshot
 
 # Verbose output (show pg_dump/pg_restore/rsync progress)
-docker compose exec odoo snapshot -v create mydb before-migration
-docker compose exec odoo snapshot -v restore before-migration
+docker compose exec odoo snapshot create -v mydb before-migration
+docker compose exec odoo snapshot restore -v before-migration
 ```

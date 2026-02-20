@@ -365,12 +365,12 @@ docker compose exec <container> snapshot restore before-migration mydb-test
 docker compose exec <container> snapshot remove before-migration
 
 # Skip confirmation prompts
-docker compose exec <container> snapshot -f restore before-migration mydb
-docker compose exec <container> snapshot -f remove old-snapshot
+docker compose exec <container> snapshot restore -f before-migration mydb
+docker compose exec <container> snapshot remove -f old-snapshot
 
 # Verbose output (show pg_dump/pg_restore/rsync progress)
-docker compose exec <container> snapshot -v create mydb before-migration
-docker compose exec <container> snapshot -v restore before-migration
+docker compose exec <container> snapshot create -v mydb before-migration
+docker compose exec <container> snapshot restore -v before-migration
 ```
 
 #### Commands
@@ -385,6 +385,8 @@ docker compose exec <container> snapshot -v restore before-migration
 Argument order follows the Unix `cp`/`rsync` convention: **source first, destination second**. On `restore`, `dbname` is optional — if omitted, it defaults to the database name recorded at backup time.
 
 #### Options
+
+Options go after the subcommand: `snapshot create -v mydb snap-name`.
 
 | Short | Long | Description |
 |---|---|---|
