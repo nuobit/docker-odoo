@@ -11,10 +11,10 @@ This is a separate command from `db` because a snapshot includes more than just 
 ## Commands
 
 ```
-snapshot create  [-n "note"] [--no-filestore] <dbname> <snapshot-name>
-snapshot restore [-f] <snapshot-name> [dbname]
+snapshot [-f] [-v] [-j N] create  [-n "note"] [--no-filestore] <dbname> <snapshot-name>
+snapshot [-f] [-v] [-j N] restore <snapshot-name> [dbname]
 snapshot list
-snapshot remove  [-f] <snapshot-name>
+snapshot [-f] remove <snapshot-name>
 ```
 
 | Command | Description |
@@ -38,6 +38,7 @@ On `restore`, `dbname` is optional — if omitted, it defaults to the `source_db
 | Short | Long | Description |
 |---|---|---|
 | `-f` | `--force` | Skip confirmation prompts on destructive operations (`restore`, `remove`) |
+| `-v` | `--verbose` | Show detailed output from `pg_dump`, `pg_restore`, and `rsync` (default: errors only) |
 | `-j` | `--jobs` | Number of parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS` default) |
 
 ### Command-specific flags
@@ -339,4 +340,8 @@ docker compose exec odoo snapshot remove before-migration
 # Skip confirmation prompts
 docker compose exec odoo snapshot -f restore before-migration mydb
 docker compose exec odoo snapshot -f remove old-snapshot
+
+# Verbose output (show pg_dump/pg_restore/rsync progress)
+docker compose exec odoo snapshot -v create mydb before-migration
+docker compose exec odoo snapshot -v restore before-migration
 ```

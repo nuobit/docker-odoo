@@ -25,7 +25,7 @@ DB_OWNER_PASSWORD=$(odoo_conf_get db_password)
 # ---------------------------------------------------------------------------
 
 usage() {
-  echo "Usage: ${script_name} [-f|--force] [-j|--jobs N] <command> [args...]"
+  echo "Usage: ${script_name} [-f|--force] [-v|--verbose] [-j|--jobs N] <command> [args...]"
   echo ""
   echo "Commands:"
   echo "  create [-n \"note\"] [--no-filestore] <dbname> <snapshot-name>"
@@ -37,6 +37,7 @@ usage() {
   echo ""
   echo "Options:"
   echo "  -f, --force       Skip all confirmation prompts (sets CONFIRM_LEVEL=none)"
+  echo "  -v, --verbose     Show detailed output from pg_dump, pg_restore, and rsync"
   # shellcheck disable=SC2154  # SNAPSHOT_JOBS from defaults.env
   echo "  -j, --jobs N      Parallel workers for pg_dump/pg_restore (default: ${SNAPSHOT_JOBS})"
   echo ""
@@ -149,11 +150,16 @@ with open(sys.argv[8], 'w') as f:
 
 CONFIRM_LEVEL="${CONFIRM_LEVEL,,}"
 JOBS="${SNAPSHOT_JOBS}"
+VERBOSE=""
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
     -f|--force)
       CONFIRM_LEVEL=none
+      shift
+      ;;
+    -v|--verbose)
+      VERBOSE=true
       shift
       ;;
     -j|--jobs)
@@ -225,7 +231,7 @@ case "${command}" in
     mkdir -p "${snap_dir}/db"
 
     echo "> Dumping database ${dbname}..."
-    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_dump -Fd -v -j "${JOBS}" --no-owner --no-acl \
+    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_dump -Fd ${VERBOSE:+-v} -j "${JOBS}" --no-owner --no-acl \
       -h "${DB_HOST}" -U "${DB_OWNER}" -d "${dbname}" \
       -f "${snap_dir}/db/"
     echo "< Done!!"
@@ -237,7 +243,7 @@ case "${command}" in
       if [[ -d "${filestore_src}" ]]; then
         mkdir -p "${snap_dir}/filestore"
         echo "> Copying filestore..."
-        rsync -av "${filestore_src}/" "${snap_dir}/filestore/"
+        rsync -a ${VERBOSE:+-v} "${filestore_src}/" "${snap_dir}/filestore/"
         echo "< Done!!"
         has_filestore=true
       else
@@ -307,7 +313,7 @@ case "${command}" in
 
     echo "> Restoring database dump..."
     rc=0
-    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_restore -Fd -v -j "${JOBS}" --no-owner --no-acl \
+    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_restore -Fd ${VERBOSE:+-v} -j "${JOBS}" --no-owner --no-acl \
       -h "${DB_HOST}" -U "${DB_OWNER}" -d "${dbname}" \
       "${snap_dir}/db/" || rc=$?
     if [[ ${rc} -gt 1 ]]; then
@@ -322,7 +328,7 @@ case "${command}" in
     if [[ "${has_snap_filestore}" == true ]]; then
       echo "> Restoring filestore..."
       mkdir -p "${filestore_target}"
-      rsync -av --delete "${snap_dir}/filestore/" "${filestore_target}/"
+      rsync -a ${VERBOSE:+-v} --delete "${snap_dir}/filestore/" "${filestore_target}/"
       echo "< Done!!"
     fi
 

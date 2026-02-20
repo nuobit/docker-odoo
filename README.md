@@ -367,6 +367,10 @@ docker compose exec <container> snapshot remove before-migration
 # Skip confirmation prompts
 docker compose exec <container> snapshot -f restore before-migration mydb
 docker compose exec <container> snapshot -f remove old-snapshot
+
+# Verbose output (show pg_dump/pg_restore/rsync progress)
+docker compose exec <container> snapshot -v create mydb before-migration
+docker compose exec <container> snapshot -v restore before-migration
 ```
 
 #### Commands
@@ -385,9 +389,10 @@ Argument order follows the Unix `cp`/`rsync` convention: **source first, destina
 | Short | Long | Description |
 |---|---|---|
 | `-f` | `--force` | Skip confirmation prompts on destructive operations (`restore`, `remove`) |
+| `-v` | `--verbose` | Show detailed output from `pg_dump`, `pg_restore`, and `rsync` (default: errors only) |
 | `-j` | `--jobs` | Number of parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS`) |
-| `-n` | `--note` | Optional description stored in metadata (`backup` only) |
-| | `--no-filestore` | Skip filestore backup — database only (`backup` only) |
+| `-n` | `--note` | Optional description stored in metadata (`create` only) |
+| | `--no-filestore` | Skip filestore — database only (`create` only) |
 
 #### Storage
 
