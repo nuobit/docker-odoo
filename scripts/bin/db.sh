@@ -46,7 +46,7 @@ usage() {
   echo "  dropuser                       Drop DB owner user"
   echo ""
   echo "Options:"
-  echo "  -f, --force       Skip database name confirmation prompt (drop/reset)"
+  echo "  -f, --force       Skip all confirmation prompts (sets CONFIRM_LEVEL=none)"
   echo ""
   echo "Configuration:"
   echo "  Connection settings from odoo.conf (db_host, db_user, db_password)."
@@ -54,7 +54,7 @@ usage() {
   echo "    DB_PGUSER             PostgreSQL admin user (default: postgres)"
   echo "    DB_PGDB               PostgreSQL maintenance database (default: postgres)"
   echo "    DB_PGUSER_PASSWORD    PostgreSQL admin password (prompted if unset)"
-  echo "    SKIP_CONFIRM          Skip confirmation prompts on destructive operations"
+  echo "    CONFIRM_LEVEL         Confirmation level: all, deletions, none"
   exit 2
 }
 
@@ -181,11 +181,13 @@ do_drop_db() {
 }
 
 # Ask the user to type the database name as a safety confirmation.
-# Usage: confirm_destructive <dbname> <action_description>
+# Shown at confirm_level=all or "deletions". Skipped only at "none".
+# Usage: confirm_destructive <dbname> <action_description> <confirm_level>
 confirm_destructive() {
   local dbname="${1}"
   local description="${2}"
-  if [[ "${FORCE}" == true ]]; then
+  local level="${3}"
+  if [[ "${level}" == "none" ]]; then
     return
   fi
   echo "WARNING: ${description}"
@@ -207,11 +209,11 @@ pg_owner() {
 # Parse flags
 # ---------------------------------------------------------------------------
 
-FORCE="${SKIP_CONFIRM,,}"
+CONFIRM_LEVEL="${CONFIRM_LEVEL,,}"
 while [[ $# -gt 0 ]]; do
   case "${1}" in
     -f|--force)
-      FORCE=true
+      CONFIRM_LEVEL=none
       shift
       ;;
     *)
@@ -309,7 +311,7 @@ case "${command}" in
       echo "Usage: ${script_name} drop <dbname>" >&2
       exit 2
     fi
-    confirm_destructive "${1}" "You are about to permanently drop database '${1}'."
+    confirm_destructive "${1}" "You are about to permanently drop database '${1}'." "${CONFIRM_LEVEL}"
     require_pguser_password
     do_drop_db "${1}"
     ;;
@@ -319,7 +321,7 @@ case "${command}" in
       echo "Usage: ${script_name} reset <dbname>" >&2
       exit 2
     fi
-    confirm_destructive "${1}" "You are about to drop and recreate database '${1}'. All data will be PERMANENTLY LOST."
+    confirm_destructive "${1}" "You are about to drop and recreate database '${1}'. All data will be PERMANENTLY LOST." "${CONFIRM_LEVEL}"
     require_pguser_password
     do_drop_db "${1}"
     do_create_db "${1}"

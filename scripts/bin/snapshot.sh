@@ -36,7 +36,7 @@ usage() {
   echo "  remove <snapshot-name>     Delete a snapshot"
   echo ""
   echo "Options:"
-  echo "  -f, --force       Skip confirmation prompts on destructive operations"
+  echo "  -f, --force       Skip all confirmation prompts (sets CONFIRM_LEVEL=none)"
   echo "  -j, --jobs N      Parallel workers for pg_dump/pg_restore (default: ${SNAPSHOT_JOBS})"
   echo ""
   echo "Configuration:"
@@ -46,12 +46,12 @@ usage() {
 }
 
 # Warn the user about a destructive action and ask for y/N confirmation.
-# Skipped when force=true.
-# Usage: confirm_destructive <description> <force>
+# Shown only when confirm_level=all. Skipped at "deletions" or "none".
+# Usage: confirm_destructive <description> <confirm_level>
 confirm_destructive() {
   local description="${1}"
-  local force="${2}"
-  if [[ "${force}" == true ]]; then
+  local level="${2}"
+  if [[ "${level}" != "all" ]]; then
     return
   fi
   echo "WARNING: ${description}"
@@ -145,13 +145,13 @@ with open(sys.argv[8], 'w') as f:
 # Parse global flags
 # ---------------------------------------------------------------------------
 
-FORCE="${SKIP_CONFIRM,,}"
+CONFIRM_LEVEL="${CONFIRM_LEVEL,,}"
 JOBS="${SNAPSHOT_JOBS}"
 
 while [[ $# -gt 0 ]]; do
   case "${1}" in
     -f|--force)
-      FORCE=true
+      CONFIRM_LEVEL=none
       shift
       ;;
     -j|--jobs)
@@ -216,7 +216,7 @@ case "${command}" in
     cleanup() {
       echo ""
       echo "WARNING: Backup failed. Leftover files found at: ${snap_dir}"
-      safe_remove_dir "${snap_dir}" "${FORCE}"
+      safe_remove_dir "${snap_dir}" "${CONFIRM_LEVEL}"
     }
     trap cleanup ERR
 
@@ -275,7 +275,7 @@ case "${command}" in
 
     confirm_destructive \
       "You are about to drop and recreate database '${dbname}' from snapshot '${snap_name}'." \
-      "${FORCE}"
+      "${CONFIRM_LEVEL}"
 
     # Warn if snapshot has no filestore but target database does
     has_snap_filestore=false
@@ -285,7 +285,7 @@ case "${command}" in
 
     filestore_target="${ODOO_DATA_DIR}/filestore/${dbname}"
     if [[ "${has_snap_filestore}" == false && -d "${filestore_target}" ]]; then
-      if [[ "${FORCE}" != true ]]; then
+      if [[ "${CONFIRM_LEVEL}" == "all" ]]; then
         echo "WARNING: Snapshot '${snap_name}' has no filestore, but '${dbname}' has an existing filestore."
         echo "The existing filestore will NOT be modified."
         read -p "Continue? [y/N] " answer
@@ -389,10 +389,10 @@ PYEOF
 
     confirm_destructive \
       "You are about to permanently delete snapshot '${snap_name}'." \
-      "${FORCE}"
+      "${CONFIRM_LEVEL}"
 
     echo "> Removing snapshot ${snap_name}..."
-    safe_remove_dir "${SNAPSHOT_DIR}/${snap_name}" "${FORCE}"
+    safe_remove_dir "${SNAPSHOT_DIR}/${snap_name}" "${CONFIRM_LEVEL}"
     echo "< Done!!"
     ;;
 

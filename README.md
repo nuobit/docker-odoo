@@ -318,7 +318,7 @@ Connection settings are read from `odoo.conf` (`db_host`, `db_user`, `db_passwor
 | `DB_PGUSER` | `defaults.env` | PostgreSQL admin user |
 | `DB_PGDB` | `defaults.env` | PostgreSQL maintenance database |
 | `DB_PGUSER_PASSWORD` | `settings.env` | PostgreSQL admin password (prompted if unset) |
-| `SKIP_CONFIRM` | `defaults.env` | Skip confirmation prompts on destructive operations |
+| `CONFIRM_LEVEL` | `defaults.env` | Confirmation level: `all`, `deletions`, `none` |
 
 The `-f` / `--force` flag can also be used to skip confirmations:
 ```bash
@@ -523,7 +523,7 @@ Baked into the image at `/opt/odoo/dist/defaults.env` (from `config/defaults.env
 | `ODOO_DATA_DIR` | `/var/lib/odoo` | Odoo data directory |
 | `DB_PGUSER` | `postgres` | PostgreSQL admin user |
 | `DB_PGDB` | `postgres` | PostgreSQL maintenance database |
-| `SKIP_CONFIRM` | `false` | Skip confirmation prompts on destructive operations |
+| `CONFIRM_LEVEL` | `all` | Confirmation level: `all`, `deletions`, `none` |
 | `SNAPSHOT_DIR` | `/opt/odoo/snapshots` | Snapshot storage directory (bind-mounted) |
 | `SNAPSHOT_JOBS` | `2` | Parallel workers for `pg_dump`/`pg_restore` |
 
@@ -536,7 +536,7 @@ A reference template is available in the `deploy/` directory of the project repo
 | Variable | Description |
 |---|---|
 | `DB_PGUSER_PASSWORD` | PostgreSQL admin password (prompted if unset) |
-| `SKIP_CONFIRM` | Skip confirmation prompts on destructive operations |
+| `CONFIRM_LEVEL` | Confirmation level: `all`, `deletions`, `none` |
 
 ---
 
