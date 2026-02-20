@@ -37,6 +37,7 @@ usage() {
   echo ""
   echo "Options:"
   echo "  -f, --force       Skip all confirmation prompts (sets CONFIRM_LEVEL=none)"
+  # shellcheck disable=SC2154  # SNAPSHOT_JOBS from defaults.env
   echo "  -j, --jobs N      Parallel workers for pg_dump/pg_restore (default: ${SNAPSHOT_JOBS})"
   echo ""
   echo "Configuration:"
@@ -65,6 +66,7 @@ confirm_destructive() {
 
 # Validate that the snapshot directory is accessible.
 require_snapshot_dir() {
+  # shellcheck disable=SC2154  # SNAPSHOT_DIR from defaults.env
   if [[ ! -d "${SNAPSHOT_DIR}" ]]; then
     echo "ERROR: Snapshot directory '${SNAPSHOT_DIR}' does not exist or is not accessible." >&2
     exit 1
@@ -229,6 +231,7 @@ case "${command}" in
     echo "< Done!!"
 
     has_filestore=false
+    # shellcheck disable=SC2154  # ODOO_DATA_DIR from defaults.env
     filestore_src="${ODOO_DATA_DIR}/filestore/${dbname}"
     if [[ "${no_filestore}" == false ]]; then
       if [[ -d "${filestore_src}" ]]; then
@@ -307,11 +310,11 @@ case "${command}" in
     PGPASSWORD="${DB_OWNER_PASSWORD}" pg_restore -Fd -j "${JOBS}" --no-owner --no-acl \
       -h "${DB_HOST}" -U "${DB_OWNER}" -d "${dbname}" \
       "${snap_dir}/db/" || rc=$?
-    if [[ $rc -gt 1 ]]; then
+    if [[ ${rc} -gt 1 ]]; then
       echo "ERROR: pg_restore failed." >&2
       exit 1
     fi
-    if [[ $rc -eq 1 ]]; then
+    if [[ ${rc} -eq 1 ]]; then
       echo "WARNING: pg_restore completed with warnings." >&2
     fi
     echo "< Done!!"

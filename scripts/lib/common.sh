@@ -14,6 +14,7 @@ fi
 # Install Python packages with common pip options
 # Usage: pip_install [pip args...]
 pip_install() {
+  # shellcheck disable=SC2154  # DIST_CONSTRAINTS from defaults.env
   pip install --upgrade --user --no-cache-dir \
     --constraint "${DIST_CONSTRAINTS}" \
     "$@"
@@ -25,6 +26,7 @@ odoo_exec() {
   local cmd="${1:-}"
   if [[ -n "${cmd}" ]]; then
     shift
+    # shellcheck disable=SC2154  # PYTHON_BIN, ODOO_BIN, ODOO_CONF from defaults.env
     exec "${PYTHON_BIN}" "${ODOO_BIN}" "${cmd}" --config "${ODOO_CONF}" "$@"
   else
     echo "Usage: odoo_exec <subcommand> [args...]" >&2

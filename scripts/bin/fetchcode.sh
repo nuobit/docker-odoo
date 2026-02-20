@@ -13,7 +13,9 @@ if [[ $# -le 2 ]]; then
   if [[ -n "${2:-}" ]]; then
     addon_args+=(-j "${2}")
   fi
+  # shellcheck disable=SC2154  # SRC_DIR from defaults.env
   pushd "${SRC_DIR}" > /dev/null
+  # shellcheck disable=SC2154  # INSTANCE_REPOS from defaults.env
   gitaggregate -c "${INSTANCE_REPOS}" "${addon_args[@]}" aggregate
   popd > /dev/null
 else

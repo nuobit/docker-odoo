@@ -8,6 +8,7 @@ script_name="${0##*/}"
 if [[ $# -eq 1 ]]; then
   repo_path="${1}"
   # Resolve and verify the path stays within SRC_DIR to prevent traversal
+  # shellcheck disable=SC2154  # SRC_DIR from defaults.env
   resolved="$(realpath -m "${SRC_DIR}/${repo_path}")"
   case "${resolved}" in
     "${SRC_DIR}/"*) ;;

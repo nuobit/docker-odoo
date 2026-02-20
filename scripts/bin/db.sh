@@ -77,6 +77,7 @@ pg_admin() {
 do_create_db() {
   local dbname="${1}"
   echo "> Creating database ${dbname}..."
+  # shellcheck disable=SC2310  # set -e disabled in || is intentional; we handle errors explicitly
   pg_admin createdb -h "${DB_HOST}" -U "${DB_PGUSER}" -O "${DB_OWNER}" -- "${dbname}" || {
     echo "Failed to create database." >&2
     exit 1
@@ -84,6 +85,7 @@ do_create_db() {
   echo "< Done!!"
 
   echo "> Creating extension unaccent..."
+  # shellcheck disable=SC2310
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${dbname}" -c "CREATE EXTENSION IF NOT EXISTS unaccent;" || {
     echo "Failed to create unaccent extension." >&2
     exit 1
@@ -99,6 +101,7 @@ do_set_datallowconn() {
   local dbname="${1}"
   local value="${2}"
   echo "> Setting datallowconn = ${value} on ${dbname}..."
+  # shellcheck disable=SC2310
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
     -v "dbname=${dbname}" -v "value=${value}" <<-'EOSQL' > /dev/null || true
 		UPDATE pg_database SET datallowconn = :value WHERE datname = :'dbname';
@@ -114,6 +117,7 @@ do_set_user_connection_limit() {
   local dbname="${1}"
   local limit="${2}"
   echo "> Setting user connection limit to ${limit} on ${dbname}..."
+  # shellcheck disable=SC2310
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
     -v "dbname=${dbname}" -v "limit=${limit}" <<-'EOSQL' > /dev/null || true
 		ALTER DATABASE :"dbname" WITH CONNECTION LIMIT :limit;
@@ -159,6 +163,7 @@ do_unblock_connections() {
 do_terminate_all_connections() {
   local dbname="${1}"
   echo "> Terminating all active connections to ${dbname}..."
+  # shellcheck disable=SC2310
   pg_admin psql -h "${DB_HOST}" -U "${DB_PGUSER}" -d "${DB_PGDB}" \
     -v "dbname=${dbname}" <<-'EOSQL' > /dev/null || true
 		SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();
@@ -173,6 +178,7 @@ do_drop_db() {
   do_block_connections all "${dbname}"
   do_terminate_all_connections "${dbname}"
   echo "> Dropping database ${dbname}..."
+  # shellcheck disable=SC2310
   pg_admin dropdb -h "${DB_HOST}" -U "${DB_PGUSER}" --if-exists -- "${dbname}" || {
     echo "Failed to drop database." >&2
     exit 1
@@ -332,6 +338,7 @@ case "${command}" in
       echo "Usage: ${script_name} list" >&2
       exit 2
     fi
+    # shellcheck disable=SC2310  # intentional: pg_owner failure triggers fallback to pg_admin
     if ! pg_owner -c "SELECT datname AS \"Database\" FROM pg_database WHERE pg_catalog.pg_get_userbyid(datdba) = current_user ORDER BY datname;" 2>/dev/null; then
       echo "WARNING: User '${DB_OWNER}' does not exist. Falling back to '${DB_PGUSER}'." >&2
       require_pguser_password
@@ -345,6 +352,7 @@ case "${command}" in
       echo "Usage: ${script_name} users" >&2
       exit 2
     fi
+    # shellcheck disable=SC2310
     if ! pg_owner -c "\du" 2>/dev/null; then
       echo "WARNING: User '${DB_OWNER}' does not exist. Falling back to '${DB_PGUSER}'." >&2
       require_pguser_password

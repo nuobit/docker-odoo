@@ -15,6 +15,7 @@ trap on_error ERR
 source "${HOME}/scripts/lib/common.sh"
 
 # specific entrypoint functions
+# shellcheck disable=SC2154  # ODOO_DATA_DIR from defaults.env
 STATE_DIR="${ODOO_DATA_DIR}/.bootstrap"
 CID_FILE="${STATE_DIR}/container_id"
 CID="$(hostname)"
@@ -43,6 +44,7 @@ EOF
     echo "Downloaded pfbfer.zip from Internet"
   else
     echo "WARNING: download failed; using bundled pfbfer.zip" >&2
+    # shellcheck disable=SC2154  # ASSETS_DIR from defaults.env
     cp "${ASSETS_DIR}/pfbfer.zip" "${zip}"
   fi
 
@@ -53,10 +55,12 @@ EOF
 }
 
 ##### MAIN
+# shellcheck disable=SC2312  # cat in subshell is safe here; exit code is irrelevant
 if [[ ! -f "${CID_FILE}" ]] || [[ "${CID}" != "$(cat "${CID_FILE}")" ]]; then
   echo ">> New container: bootstrapping..."
   mkdir -p "${STATE_DIR}"
   echo "> Installing base Python requirements..."
+  # shellcheck disable=SC2154  # BIN_DIR from defaults.env
   "${BIN_DIR}/fetchbasereqs"
   echo "< Done!"
   echo "> Fetching source code..."

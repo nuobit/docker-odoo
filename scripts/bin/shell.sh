@@ -7,6 +7,7 @@ script_name="${0##*/}"
 
 if [[ $# -eq 1 ]]; then
   database_name="${1}"
+  # shellcheck disable=SC2154  # ODOO_SHELL_PORT from defaults.env
   odoo_exec shell \
     --database "${database_name}" \
     --xmlrpc-port "${ODOO_SHELL_PORT}"
