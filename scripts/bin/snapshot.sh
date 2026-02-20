@@ -237,7 +237,7 @@ case "${command}" in
       if [[ -d "${filestore_src}" ]]; then
         mkdir -p "${snap_dir}/filestore"
         echo "> Copying filestore..."
-        rsync -a "${filestore_src}/" "${snap_dir}/filestore/"
+        rsync -av "${filestore_src}/" "${snap_dir}/filestore/"
         echo "< Done!!"
         has_filestore=true
       else
@@ -322,7 +322,7 @@ case "${command}" in
     if [[ "${has_snap_filestore}" == true ]]; then
       echo "> Restoring filestore..."
       mkdir -p "${filestore_target}"
-      rsync -a --delete "${snap_dir}/filestore/" "${filestore_target}/"
+      rsync -av --delete "${snap_dir}/filestore/" "${filestore_target}/"
       echo "< Done!!"
     fi
 
