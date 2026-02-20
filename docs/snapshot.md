@@ -4,6 +4,8 @@ The `snapshot` command provides named backup/restore of a complete Odoo environm
 
 This is a separate command from `db` because a snapshot includes more than just the database — it also captures the filestore.
 
+**Note:** The existing `db import` command (SQL-only, stdin-based) remains unchanged and serves a different purpose — importing external SQL dumps from production servers or third parties. `snapshot` is for local named backup/restore workflows with full environment state (DB + filestore).
+
 ---
 
 ## Commands
