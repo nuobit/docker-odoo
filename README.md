@@ -320,10 +320,13 @@ Connection settings are read from `odoo.conf` (`db_host`, `db_user`, `db_passwor
 | `DB_PGUSER_PASSWORD` | `settings.env` | PostgreSQL admin password (prompted if unset) |
 | `CONFIRM_LEVEL` | `defaults.env` | Confirmation level: `all`, `deletions`, `none` |
 
-The `-f` / `--force` flag can also be used to skip confirmations:
-```bash
-docker compose exec <container> db -f drop <database>
-```
+#### Options
+
+Options go after the subcommand: `db drop -f mydb`.
+
+| Short | Long | Description | Applies to |
+|---|---|---|---|
+| `-f` | `--force` | Skip confirmation prompts (sets `CONFIRM_LEVEL=none`) | `drop`, `reset` |
 
 **Interactive shell access:**
 ```bash
@@ -377,10 +380,10 @@ docker compose exec <container> snapshot restore -v before-migration
 
 | Command | Description |
 |---|---|
-| `create [-n "note"] [--no-filestore] <dbname> <snapshot-name>` | Create a snapshot of DB + filestore |
-| `restore <snapshot-name> [dbname]` | Restore a named snapshot into a database |
+| `create [-v\|--verbose] [-j\|--jobs N] [-n\|--note "text"] [--no-filestore] <dbname> <snapshot-name>` | Create a snapshot of DB + filestore |
+| `restore [-f\|--force] [-v\|--verbose] [-j\|--jobs N] <snapshot-name> [dbname]` | Restore a named snapshot into a database |
 | `list` | List available snapshots with metadata |
-| `remove <snapshot-name>` | Delete a snapshot |
+| `remove [-f\|--force] <snapshot-name>` | Delete a snapshot |
 
 Argument order follows the Unix `cp`/`rsync` convention: **source first, destination second**. On `restore`, `dbname` is optional — if omitted, it defaults to the database name recorded at backup time.
 
@@ -388,13 +391,13 @@ Argument order follows the Unix `cp`/`rsync` convention: **source first, destina
 
 Options go after the subcommand: `snapshot create -v mydb snap-name`.
 
-| Short | Long | Description |
-|---|---|---|
-| `-f` | `--force` | Skip confirmation prompts on destructive operations (`restore`, `remove`) |
-| `-v` | `--verbose` | Show detailed output from `pg_dump`, `pg_restore`, and `rsync` (default: errors only) |
-| `-j` | `--jobs` | Number of parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS`) |
-| `-n` | `--note` | Optional description stored in metadata (`create` only) |
-| | `--no-filestore` | Skip filestore — database only (`create` only) |
+| Short | Long | Description | Applies to |
+|---|---|---|---|
+| `-f` | `--force` | Skip confirmation prompts (sets `CONFIRM_LEVEL=none`) | `restore`, `remove` |
+| `-v` | `--verbose` | Show detailed output from `pg_dump`, `pg_restore`, and `rsync` (default: errors only) | `create`, `restore` |
+| `-j` | `--jobs` | Number of parallel workers for `pg_dump`/`pg_restore` (overrides `SNAPSHOT_JOBS`) | `create`, `restore` |
+| `-n` | `--note` | Optional description stored in metadata | `create` |
+| | `--no-filestore` | Skip filestore (database only) | `create` |
 
 #### Storage
 

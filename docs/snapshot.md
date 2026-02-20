@@ -11,10 +11,10 @@ This is a separate command from `db` because a snapshot includes more than just 
 ## Commands
 
 ```
-snapshot create  [options] <dbname> <snapshot-name>
-snapshot restore [options] <snapshot-name> [dbname]
+snapshot create  [-v|--verbose] [-j|--jobs N] [-n|--note "text"] [--no-filestore] <dbname> <snapshot-name>
+snapshot restore [-f|--force] [-v|--verbose] [-j|--jobs N] <snapshot-name> [dbname]
 snapshot list
-snapshot remove  [options] <snapshot-name>
+snapshot remove  [-f|--force] <snapshot-name>
 ```
 
 | Command | Description |
@@ -156,7 +156,7 @@ If `dbname` is omitted, defaults to `source_db` from the snapshot's `metadata.js
    Skipped with `-f`/`--force`.
 5. Drop the existing database (reuses `db` command):
    ```
-   db -f drop <dbname>
+   db drop -f <dbname>
    ```
 6. Create a fresh database (reuses `db` command):
    ```
@@ -285,7 +285,7 @@ The Dockerfile strips `.sh` extensions and adds `scripts/bin/` to PATH, so `snap
 
 | Operation | How snapshot.sh does it |
 |---|---|
-| Drop database + terminate connections | `db -f drop <dbname>` |
+| Drop database + terminate connections | `db drop -f <dbname>` |
 | Create database + unaccent extension | `db create <dbname>` |
 | Admin password handling | Handled by `db` internally |
 

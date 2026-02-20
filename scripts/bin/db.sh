@@ -27,14 +27,14 @@ DB_OWNER_PASSWORD=$(odoo_conf_get db_password)
 # ---------------------------------------------------------------------------
 
 usage() {
-  echo "Usage: ${script_name} [-f|--force] <command> [args...]"
+  echo "Usage: ${script_name} <command> [options] [args...]"
   echo ""
   echo "Commands:"
   echo "  create <dbname>                Create a database"
   echo "  init <dbname> [demo]           Initialize Odoo base module in database"
   echo "  import <dbname>               Import SQL dump from stdin into database"
-  echo "  drop <dbname>                  Drop a database (terminates active connections)"
-  echo "  reset <dbname>                 Drop and recreate a database (terminates active connections)"
+  echo "  drop [-f|--force] <dbname>     Drop a database (terminates active connections)"
+  echo "  reset [-f|--force] <dbname>    Drop and recreate a database (terminates active connections)"
   echo "  block all <dbname>             Block ALL connections and terminate existing ones"
   echo "  block users <dbname>           Block non-superuser connections and terminate existing ones"
   echo "  unblock all <dbname>           Unblock ALL connections"
@@ -45,8 +45,8 @@ usage() {
   echo "  createuser                     Create DB owner user (password from db_password)"
   echo "  dropuser                       Drop DB owner user"
   echo ""
-  echo "Options:"
-  echo "  -f, --force       Skip all confirmation prompts (sets CONFIRM_LEVEL=none)"
+  echo "Options (after subcommand):"
+  echo "  -f, --force       Skip confirmation prompts (applies to: drop, reset)"
   echo ""
   echo "Configuration:"
   echo "  Connection settings from odoo.conf (db_host, db_user, db_password)."
@@ -212,8 +212,15 @@ pg_owner() {
 }
 
 # ---------------------------------------------------------------------------
-# Parse flags
+# Parse command and flags
 # ---------------------------------------------------------------------------
+
+if [[ $# -lt 1 ]]; then
+  usage
+fi
+
+command="${1}"
+shift
 
 CONFIRM_LEVEL="${CONFIRM_LEVEL,,}"
 while [[ $# -gt 0 ]]; do
@@ -227,13 +234,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-if [[ $# -lt 1 ]]; then
-  usage
-fi
-
-command="${1}"
-shift
 
 # ---------------------------------------------------------------------------
 # Commands
