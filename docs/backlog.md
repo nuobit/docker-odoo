@@ -14,6 +14,10 @@ Future decisions and tasks to revisit. Not in current scope.
     1. **Input validation** — Add a `validate_name` helper to `common.sh` that rejects names containing `/`, `..`, or `.` (must be a single safe path component). Call it early in every command that takes user-provided names.
     2. **Safe deletion** — Add a `safe_remove_dir` helper to `common.sh` that resolves both parent and target with `realpath -m` before checking containment, then runs `rm -rf`. Replace all bare `rm -rf` calls with it. String prefix checks alone are not enough (`"foo/../../bar"` starts with `"foo/"` but resolves outside).
   - Both helpers belong in `common.sh` for reuse across all scripts.
+- [ ] Add `dump` and `restore` commands to `db.sh` so all PostgreSQL operations live in one place
+  - Currently `snapshot.sh` calls `pg_dump -Fd` and `pg_restore -Fd` directly for directory-format parallel dumps.
+  - `db.sh` only has `import` (plain SQL via `psql -f -`), which is a different format.
+  - Adding `db dump` and `db restore` (directory format, parallel jobs) would let `snapshot.sh` delegate all DB operations to `db.sh` and focus purely on orchestration (filestore + metadata).
 - [ ] Extract embedded Python from `snapshot.sh` into standalone scripts
   - `snapshot.sh` contains inline Python heredocs for JSON operations (`metadata_get`, `write_metadata`, `list` command). These are hard to read, test, and lint inside bash.
   - Move each to a separate Python file under `scripts/lib/` (e.g., `snapshot_metadata.py`) and call from the shell script.
