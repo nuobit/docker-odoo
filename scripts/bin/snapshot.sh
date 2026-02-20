@@ -225,7 +225,7 @@ case "${command}" in
     mkdir -p "${snap_dir}/db"
 
     echo "> Dumping database ${dbname}..."
-    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_dump -Fd -j "${JOBS}" --no-owner --no-acl \
+    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_dump -Fd -v -j "${JOBS}" --no-owner --no-acl \
       -h "${DB_HOST}" -U "${DB_OWNER}" -d "${dbname}" \
       -f "${snap_dir}/db/"
     echo "< Done!!"
@@ -307,7 +307,7 @@ case "${command}" in
 
     echo "> Restoring database dump..."
     rc=0
-    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_restore -Fd -j "${JOBS}" --no-owner --no-acl \
+    PGPASSWORD="${DB_OWNER_PASSWORD}" pg_restore -Fd -v -j "${JOBS}" --no-owner --no-acl \
       -h "${DB_HOST}" -U "${DB_OWNER}" -d "${dbname}" \
       "${snap_dir}/db/" || rc=$?
     if [[ ${rc} -gt 1 ]]; then
