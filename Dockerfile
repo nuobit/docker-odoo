@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -6,15 +6,8 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV LANGUAGE=C.UTF-8
 
-# Stretch is EOL -> use archive.debian.org
-RUN sed -i 's|deb.debian.org/debian|archive.debian.org/debian|g' /etc/apt/sources.list && \
-    sed -i 's|security.debian.org/debian-security|archive.debian.org/debian-security|g' /etc/apt/sources.list && \
-    sed -i '/stretch-updates/d' /etc/apt/sources.list 
-
-#RUN printf 'Acquire::Check-Valid-Until "false";\nAcquire::AllowInsecureRepositories "true";\n' > /etc/apt/apt.conf.d/99no-check-valid-until
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    apt-transport-https vim ca-certificates curl git unzip rsync \
+    vim ca-certificates curl git unzip rsync \
     gcc build-essential \
     python2.7 python-pip python-setuptools \
     python-dev \
@@ -25,11 +18,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# PostgreSQL client from official archive repo (Stretch EOL)
+# PostgreSQL client from the official pgdg repo
 RUN install -d /usr/share/postgresql-common/pgdg && \
         curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
             https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
-        echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt-archive.postgresql.org/pub/repos/apt stretch-pgdg main" \
+        echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
             > /etc/apt/sources.list.d/pgdg.list && \
         apt-get update && apt-get install -y --no-install-recommends postgresql-client && \
         apt-get clean && rm -rf /var/lib/apt/lists/*
