@@ -109,7 +109,13 @@ RUN npm install -g less@2.7.3 less-plugin-clean-css@1.5.1
 ENV HOME=/opt/odoo
 RUN useradd -m -u 99910 -d "$HOME" odoo
 
-ENV PATH=$HOME/scripts/bin:$HOME/.local/bin:$PATH
+# Virtualenv for pip-installed tooling (git-aggregator, click-odoo-contrib,
+# openupgradelib). --system-site-packages lets the venv reuse python3-*
+# packages installed from apt (lxml, psycopg2, reportlab, gevent, ...).
+RUN python3 -m venv --system-site-packages /opt/odoo/venv && \
+    chown -R odoo:odoo /opt/odoo/venv
+
+ENV PATH=/opt/odoo/venv/bin:$HOME/scripts/bin:$HOME/.local/bin:$PATH
 
 # image defaults (baked in)
 COPY --chown=odoo:odoo config/ /opt/odoo/dist/
