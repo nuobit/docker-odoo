@@ -11,11 +11,12 @@ else
   exit 1
 fi
 
-# Install Python packages with common pip options
+# Install Python packages with common pip options.
+# Runs inside the /opt/odoo/venv virtualenv (first in PATH).
 # Usage: pip_install [pip args...]
 pip_install() {
   # shellcheck disable=SC2154  # DIST_CONSTRAINTS from defaults.env
-  pip install --upgrade --user --no-cache-dir \
+  pip install --upgrade --no-cache-dir \
     --constraint "${DIST_CONSTRAINTS}" \
     "$@"
 }

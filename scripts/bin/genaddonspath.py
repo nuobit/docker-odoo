@@ -1,15 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Generate addons_path parameter for odoo.conf from repos.yaml and update odoo.conf
 """
 import io
 import re
 import os
-# shlex.quote is Python 3+; fall back to pipes.quote for Python 2
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
+from shlex import quote
 import subprocess
 
 import yaml
