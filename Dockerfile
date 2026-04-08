@@ -9,13 +9,62 @@ ENV LANGUAGE=C.UTF-8
 RUN apt-get update && apt-get install -y --no-install-recommends \
     vim ca-certificates curl git unzip rsync \
     gcc build-essential \
-    python2.7 python-pip python-setuptools \
-    python-dev \
+    python3 python3-pip python3-setuptools python3-venv \
+    python3-dev \
     libxml2-dev libxslt1-dev \
     libldap2-dev libsasl2-dev \
     libssl-dev \
     libjpeg-dev zlib1g-dev \
     libpq-dev \
+    # Odoo 19 runtime dependencies (mirrors debian/control Depends)
+    python3-asn1crypto \
+    python3-babel \
+    python3-cbor2 \
+    python3-chardet \
+    python3-cryptography \
+    python3-dateutil \
+    python3-docutils \
+    python3-freezegun \
+    python3-geoip2 \
+    python3-gevent \
+    python3-greenlet \
+    python3-idna \
+    python3-jinja2 \
+    python3-ldap \
+    python3-libsass \
+    python3-lxml \
+    python3-magic \
+    python3-markupsafe \
+    python3-num2words \
+    python3-ofxparse \
+    python3-openpyxl \
+    python3-openssl \
+    python3-passlib \
+    python3-pil \
+    python3-polib \
+    python3-psutil \
+    python3-psycopg2 \
+    python3-pypdf2 \
+    python3-qrcode \
+    python3-renderpm \
+    python3-reportlab \
+    python3-requests \
+    python3-rjsmin \
+    python3-stdnum \
+    python3-tz \
+    python3-urllib3 \
+    python3-vobject \
+    python3-werkzeug \
+    python3-xlrd \
+    python3-xlsxwriter \
+    python3-zeep \
+    # Fonts and web assets shipped with Odoo
+    fonts-dejavu-core \
+    fonts-font-awesome \
+    fonts-freefont-ttf \
+    fonts-inconsolata \
+    fonts-roboto-unhinted \
+    libjs-underscore \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client from the official pgdg repo
