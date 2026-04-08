@@ -76,7 +76,7 @@ RUN install -d /usr/share/postgresql-common/pgdg && \
         apt-get update && apt-get install -y --no-install-recommends postgresql-client && \
         apt-get clean && rm -rf /var/lib/apt/lists/*
 
-## wkhtmltopdf
+## wkhtmltopdf (patched-Qt build required by Odoo)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     fontconfig libfreetype6 libpng16-16 \
     libx11-6 libxcb1 libxext6 libxrender1 \
@@ -85,10 +85,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN set -eux; \
     cd /tmp; \
     curl -fsSL \
-      https://github.com/wkhtmltopdf/packaging/releases/download/0.12.1.4-2/wkhtmltox_0.12.1.4-2.stretch_amd64.deb \
+      https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
       -o wkhtml.deb; \
-    dpkg -i wkhtml.deb; \
-    rm -f wkhtml.deb
+    apt-get update && apt-get install -y --no-install-recommends ./wkhtml.deb && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* wkhtml.deb
 
 ENV PYTHONIOENCODING=UTF-8
 
