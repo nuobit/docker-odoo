@@ -92,19 +92,6 @@ RUN set -eux; \
 
 ENV PYTHONIOENCODING=UTF-8
 
-# ---- Node.js 6.x (official binary) for Odoo 10 ----
-ENV NODE_VERSION=6.17.1
-RUN set -eux; \
-    cd /tmp; \
-    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o node.tar.xz; \
-    tar -xJf node.tar.xz; \
-    cp -r node-v${NODE_VERSION}-linux-x64/bin /usr/local/; \
-    cp -r node-v${NODE_VERSION}-linux-x64/lib /usr/local/; \
-    cp -r node-v${NODE_VERSION}-linux-x64/include /usr/local/; \
-    cp -r node-v${NODE_VERSION}-linux-x64/share /usr/local/; \
-    rm -rf /tmp/node*
-RUN npm install -g less@2.7.3 less-plugin-clean-css@1.5.1
-
 # optional: create a fixed user
 ENV HOME=/opt/odoo
 RUN useradd -m -u 99910 -d "$HOME" odoo
